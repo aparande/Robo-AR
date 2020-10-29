@@ -39,7 +39,9 @@ For assumptions we will make through the project, see the assumptions section.
 3. Affine motor model with respect to input
 
 ![Motor model](Images/state_eq.png)
+
 ![Left Motor](Images/vl.png)
+
 ![Right Motor](Images/vr.png)
 
 4. Robot receives full knowledge of trajectory before moving
