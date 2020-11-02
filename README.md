@@ -33,11 +33,17 @@ For assumptions we will make through the project, see the assumptions section.
 ## Assumptions:
 1. The robots dynamics will be constant throughout the entire duration
 2. Differential-drive modeled robot (Romi)
+
 ![Romi Model](Images/model.png)
+
 3. Affine motor model with respect to input
+
 ![Motor model](Images/state_eq.png)
+
 ![Left Motor](Images/vl.png)
+
 ![Right Motor](Images/vr.png)
+
 4. Robot receives full knowledge of trajectory before moving
 5. Static environment (obstacles won’t appear/disappear after initial plan is made)
 
