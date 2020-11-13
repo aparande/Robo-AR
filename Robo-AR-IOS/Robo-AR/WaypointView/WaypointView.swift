@@ -40,7 +40,7 @@ class WaypointView: ARView {
                 selectedEntity = nil
             } else {
                 let direction = entity.position(relativeTo: selected)
-                print("Distance is \(direction.magnitude) meters in the direction \(direction)")
+                print("Distance is \(direction.lengthHorizontal) meters in the direction \(direction)")
             }
         } else {
             selectedEntity = selected
@@ -77,7 +77,13 @@ class WaypointView: ARView {
 }
 
 extension SIMD3 where Scalar == Float {
-    var magnitude: Float {
-        return sqrtf(x * x + y * y + z * z)
+    var lengthHorizontal: Float {
+        return sqrtf(x * x  + z * z)
+    }
+    
+    func horizontalAngle(to other:SIMD3) -> Float {
+        // x axis is oriented such that positive is right
+        // z axis is oriented such that positive is towards the user (which is why it is flipped from the angle calculation
+        return atan2f(self.z - other.z, other.x - self.x)
     }
 }

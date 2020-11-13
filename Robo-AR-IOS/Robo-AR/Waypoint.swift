@@ -44,6 +44,15 @@ class Waypoint: Entity, HasModel, HasAnchoring, HasCollision {
         fatalError("init() has not been implemented")
     }
     
+    
+    func distanceTo(_ other:Waypoint) -> Float {
+        return self.parent!.position(relativeTo: other.parent!).lengthHorizontal
+    }
+    
+    func angleTo(_ other: Waypoint) -> Float {
+        return self.parent!.position.horizontalAngle(to: other.parent!.position)
+    }
+    
     private func constructText() {
         let mesh = MeshResource.generateText(
             "\(self.number)",
@@ -59,9 +68,5 @@ class Waypoint: Entity, HasModel, HasAnchoring, HasCollision {
         entity.setPosition(SIMD3<Float>(0, 0.05, 0), relativeTo: self)
         
         self.addChild(entity)
-    }
-    
-    private func distanceTo(_ other:Waypoint) -> Float {
-        return self.parent!.position(relativeTo: other.parent!).magnitude
     }
 }

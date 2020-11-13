@@ -12,6 +12,7 @@ import ARKit
 
 class ViewController: UIViewController {
     @IBOutlet var arView: WaypointView!
+    @IBOutlet weak var generateButton: UIButton!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,5 +27,17 @@ class ViewController: UIViewController {
         arView.debugOptions.insert(.showSceneUnderstanding)
         arView.debugOptions.insert(.showWorldOrigin)
         //arView.debugOptions.insert(.showAnchorGeometry)
+        
+        generateButton.layer.cornerRadius = 20
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        guard let destination = segue.destination as? InstructionTableViewController else { return }
+        
+        for waypoint in arView.waypoints {
+            guard let next = waypoint.next else { continue }
+            destination.instructions.append(Instruction(distance: waypoint.distanceTo(next), angle: waypoint.angleTo(next)))
+        }
+        
     }
 }
