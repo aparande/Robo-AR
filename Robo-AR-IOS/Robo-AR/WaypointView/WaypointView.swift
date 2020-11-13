@@ -58,13 +58,13 @@ class WaypointView: ARView {
             return
         }
 
-        let transformation = Transform(matrix: result.worldTransform)
-        let box = Waypoint(color: .yellow, number: waypointCount)
+        var transformation = Transform(matrix: result.worldTransform)
+        transformation.translation += [0, 0.1, 0]
+        let box = Waypoint(color: .systemBlue, number: waypointCount)
         self.installGestures(for: box)
         box.generateCollisionShapes(recursive: true)
         box.transform = transformation
-
-        
+        box.orientation = simd_quatf(angle: .pi/4, axis: [0, 0, 1])
 
         let raycastAnchor = AnchorEntity(raycastResult: result)
         raycastAnchor.addChild(box)
