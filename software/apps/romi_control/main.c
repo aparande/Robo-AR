@@ -58,6 +58,9 @@ simple_ble_app_t* simple_ble_app;
 float waypoint[2] = {0, 0};
 bool recieved_point = false;
 states state = OFF;
+//float total_distance = 0;
+float total_distance_left = 0;
+float total_distance_right = 0;
 
 void ble_evt_write(ble_evt_t const* p_ble_evt) {
     //logic for each characteristic and related state changes
@@ -66,21 +69,66 @@ void ble_evt_write(ble_evt_t const* p_ble_evt) {
         if (state == WAITING) {
             printf("Distance: %f\n", waypoint[0]);
             printf("Angle: %f\n", waypoint[1]);
-            recieved_point = true
+            recieved_point = true;
         }
 }
 
 void print_state(states current_state){
+    char buf[16];
 	switch(current_state){
 	case OFF: {
 		display_write("OFF", DISPLAY_LINE_0);
+        snprintf(buf, 16, "", waypoint[1]);
+		display_write(buf, DISPLAY_LINE_1);
 		break;
       }
 	case WAITING: {
 		display_write("WAITING", DISPLAY_LINE_0);
+        snprintf(buf, 16, "", waypoint[1]);
+		display_write(buf, DISPLAY_LINE_1);
+		break;
+    }
+	case TURNING: {
+        snprintf(buf, 16, "TURN TARGET: %f", waypoint[1]);
+        display_write(buf, DISPLAY_LINE_0);
+        snprintf(buf, 16, "ANGLE CUR: %f", lsm9ds1_read_gyro_integration().z_axis);
+		display_write(buf, DISPLAY_LINE_1);
+		break;
+    }
+	case DRIVING: {
+        snprintf(buf, 16, "TARGET: %.2f", waypoint[0]);
+		display_write(buf, DISPLAY_LINE_0);
+        snprintf(buf, 16, "L: %.2f R: %.2f", total_distance_left, total_distance_right);
+		display_write(buf, DISPLAY_LINE_1);
 		break;
     }
    }
+}
+
+static float measure_distance(uint16_t current_encoder, uint16_t previous_encoder) {
+  const float CONVERSION = 0.0006108;
+  float distance = 0;
+  if (current_encoder < previous_encoder) {
+      if (previous_encoder - current_encoder > 30000) {
+        distance = (current_encoder - previous_encoder + 655365);
+      }
+      else {
+        distance = current_encoder - previous_encoder;
+      }
+  }
+  else {
+      if (current_encoder  - previous_encoder > 30000) {
+        distance = (current_encoder - previous_encoder - 655365);
+      }
+      else {
+        distance = current_encoder - previous_encoder;
+      }
+  }
+  float val = CONVERSION * distance;
+  if (fabs(val) > 300) {
+     val = 0;
+  }
+  return val;
 }
 
 int main(void) {
@@ -109,6 +157,12 @@ int main(void) {
   nrf_gpio_pin_dir_set(23, NRF_GPIO_PIN_DIR_OUTPUT);
   nrf_gpio_pin_dir_set(24, NRF_GPIO_PIN_DIR_OUTPUT);
   nrf_gpio_pin_dir_set(25, NRF_GPIO_PIN_DIR_OUTPUT);
+
+  nrf_gpio_pin_set(23);
+  nrf_gpio_pin_set(24);
+  nrf_gpio_pin_set(25);
+
+
 
   // initialize display
   nrf_drv_spi_t spi_instance = NRF_DRV_SPI_INSTANCE(1);
@@ -143,32 +197,101 @@ int main(void) {
   printf("Kobuki initialized!\n");
 
 
+  float angle_threshold = .5;
+  float distance_threshold = .02;
+  float encoder_prev_left = 0;
+  float encoder_prev_right = 0;
+  float encoder_cur_left = 0;
+  float encoder_cur_right = 0;
+
   // loop forever, running state machine
   while (1) {
     // read sensors from robot
     int status = kobukiSensorPoll(&sensors);
+    // print out current state
     print_state(state);
+    // switch into appropriate states
+    // OFF - No response to any signals until button pressed to go to WAITING
+    // WAITING - Do nothing until waypoint is recieved. Then go to TURNING
+    // Turning - Turn amount specified by waypoint. Then go DRIVING
+    // Driving - Drive the amount specified by waypoint. Then go back to WAITING
     switch(state) {
       case OFF: {
-        // transition logic
-        if (is_button_pressed(&sensors) || recieved_point) {
+        if (is_button_pressed(&sensors)) {
+          nrf_gpio_pin_clear(23);
           state = WAITING;
         } else {
           state = OFF;
-          // perform state-specific actions here
           kobukiDriveDirect(0, 0);
         }
-        break; // each case needs to end with break!
+        break;
       }
-      case WAITING: { // transition logic
+      case WAITING: {
         if (is_button_pressed(&sensors)) {
           state = OFF;
+        } else if (recieved_point) {
+          recieved_point = false;
+          lsm9ds1_start_gyro_integration();
+          state = TURNING;
         } else {
           state = WAITING;
-          // perform state-specific actions here
           kobukiDriveDirect(0, 0);
         }
-        break; // each case needs to end with break!
+        break;
+      }
+      case TURNING: {
+        float current_angle = lsm9ds1_read_gyro_integration().z_axis;
+        float diff = waypoint[1] - current_angle;
+        if (is_button_pressed(&sensors)) {
+          lsm9ds1_stop_gyro_integration();
+          state = OFF;
+        } else if (fabs(diff) < angle_threshold) {
+            lsm9ds1_stop_gyro_integration();
+            encoder_prev_left = sensors.leftWheelEncoder;
+            encoder_prev_right = sensors.rightWheelEncoder;
+            state = DRIVING;
+        }
+        else {
+          state = TURNING;
+          int8_t sign = (2 * (diff > 0)) - 1;
+          int16_t speed = sign * fmax(.8 * fabs(diff), 50);
+          kobukiDriveDirect(-speed, speed);
+        }
+        break;
+      }
+      case DRIVING: {
+        float diff_left = waypoint[0] - total_distance_left;
+        float diff_right = waypoint[0] - total_distance_right;
+        float wheel_diff = total_distance_left - total_distance_right;
+        if (is_button_pressed(&sensors)) {
+            total_distance_left = 0;
+            total_distance_right = 0;
+            //total_distance = 0;
+          state = OFF;
+        } else if ((fabs(diff_left) < distance_threshold) && (fabs(diff_right) < distance_threshold)) {
+            total_distance_left = 0;
+            total_distance_right = 0;
+            //total_distance = 0;
+            state = WAITING;
+        } else {
+          state = DRIVING;
+          encoder_cur_left = sensors.leftWheelEncoder;
+          encoder_cur_right = sensors.rightWheelEncoder;
+          total_distance_left += measure_distance(encoder_cur_left, encoder_prev_left);
+          total_distance_right += measure_distance(encoder_cur_right, encoder_prev_right);
+          //total_distance = (.5 * total_distance_left) + (.5 * total_distance_right);
+          encoder_prev_left = encoder_cur_left;
+          encoder_prev_right = encoder_cur_right;
+          int8_t sign_left = (2 * (diff_left > 0)) - 1;
+          //Wheel diff might not work if backwards :(
+          int16_t speed_left =  sign_left * fmax(110 * fabs(diff_left), 30) - 250 * wheel_diff;
+          //int16_t speed_left =  sign_left * fmax(-220 * wheel_diff, 40);
+          int8_t sign_right = (2 * (diff_right > 0)) - 1;
+          int16_t speed_right = sign_right * fmax(110 * fabs(diff_right), 50) + 250 * wheel_diff;
+          kobukiDriveDirect(speed_left, speed_right);
+          //kobukiDriveDirect(speed_left , sign_right * 80);
+        }
+        break;
       }
     }
   }
