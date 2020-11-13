@@ -4,6 +4,8 @@
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17126"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -11,17 +13,101 @@
         <scene sceneID="tne-QT-ifu">
             <objects>
                 <viewController id="BYZ-38-t0r" userLabel="ARView" customClass="ViewController" customModule="Robo_AR" customModuleProvider="target" sceneMemberID="viewController">
-                    <arView key="view" multipleTouchEnabled="YES" contentMode="scaleToFill" id="8bC-Xf-vdC" customClass="WaypointView" customModule="Robo_AR" customModuleProvider="target">
+                    <view key="view" contentMode="scaleToFill" id="eK7-xN-QX6">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    </arView>
+                        <subviews>
+                            <arView multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="daP-Rn-669" customClass="WaypointView" customModule="Robo_AR" customModuleProvider="target">
+                                <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                            </arView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="1Ed-kz-DKF">
+                                <rect key="frame" x="35" y="812" width="344" height="50"/>
+                                <color key="backgroundColor" systemColor="linkColor"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="50" id="H0e-4m-WUk"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="19"/>
+                                <state key="normal" title="Go">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                </state>
+                                <connections>
+                                    <segue destination="e3b-xW-MF8" kind="show" id="T6P-gs-IHo"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="BjW-dv-ofW"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstAttribute="bottom" secondItem="daP-Rn-669" secondAttribute="bottom" id="L54-68-x8Q"/>
+                            <constraint firstItem="daP-Rn-669" firstAttribute="leading" secondItem="BjW-dv-ofW" secondAttribute="leading" id="Q91-3E-Sj5"/>
+                            <constraint firstItem="BjW-dv-ofW" firstAttribute="bottom" secondItem="1Ed-kz-DKF" secondAttribute="bottom" id="UeC-ut-a17"/>
+                            <constraint firstItem="daP-Rn-669" firstAttribute="top" secondItem="eK7-xN-QX6" secondAttribute="top" id="XYd-38-wPV"/>
+                            <constraint firstItem="BjW-dv-ofW" firstAttribute="trailing" secondItem="daP-Rn-669" secondAttribute="trailing" id="e90-Rg-lDk"/>
+                            <constraint firstItem="1Ed-kz-DKF" firstAttribute="leading" secondItem="BjW-dv-ofW" secondAttribute="leading" constant="35" id="e9K-M6-bOf"/>
+                            <constraint firstItem="BjW-dv-ofW" firstAttribute="trailing" secondItem="1Ed-kz-DKF" secondAttribute="trailing" constant="35" id="pLE-di-mCa"/>
+                        </constraints>
+                    </view>
                     <connections>
-                        <outlet property="arView" destination="8bC-Xf-vdC" id="TPV-4x-avp"/>
+                        <outlet property="arView" destination="daP-Rn-669" id="hFD-f3-gQf"/>
+                        <outlet property="generateButton" destination="1Ed-kz-DKF" id="lbe-Bj-k81"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="138" y="134"/>
+            <point key="canvasLocation" x="137.68115942028987" y="133.92857142857142"/>
+        </scene>
+        <!--Instruction Table View Controller-->
+        <scene sceneID="fqf-dT-3Sk">
+            <objects>
+                <tableViewController id="e3b-xW-MF8" customClass="InstructionTableViewController" customModule="Robo_AR" customModuleProvider="target" sceneMemberID="viewController">
+                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" id="GA4-ch-h8f">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <prototypes>
+                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" accessoryType="checkmark" indentationWidth="10" reuseIdentifier="instructionCell" textLabel="GB6-yk-jJB" detailTextLabel="aTW-88-8Hg" style="IBUITableViewCellStyleSubtitle" id="zcY-Ew-7En">
+                                <rect key="frame" x="0.0" y="28" width="414" height="55.5"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="zcY-Ew-7En" id="7eR-pw-no5">
+                                    <rect key="frame" x="0.0" y="0.0" width="370" height="55.5"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                    <subviews>
+                                        <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="Title" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="GB6-yk-jJB">
+                                            <rect key="frame" x="20" y="10" width="33" height="20.5"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                            <nil key="textColor"/>
+                                            <nil key="highlightedColor"/>
+                                        </label>
+                                        <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="Detail" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="aTW-88-8Hg">
+                                            <rect key="frame" x="20" y="31.5" width="33" height="14.5"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                            <nil key="textColor"/>
+                                            <nil key="highlightedColor"/>
+                                        </label>
+                                    </subviews>
+                                </tableViewCellContentView>
+                            </tableViewCell>
+                        </prototypes>
+                        <connections>
+                            <outlet property="dataSource" destination="e3b-xW-MF8" id="CMp-gM-3dD"/>
+                            <outlet property="delegate" destination="e3b-xW-MF8" id="9Dy-SQ-gYs"/>
+                        </connections>
+                    </tableView>
+                    <navigationItem key="navigationItem" id="z8G-MH-Gg9"/>
+                </tableViewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="iqF-fV-97P" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="983" y="134"/>
         </scene>
     </scenes>
+    <resources>
+        <systemColor name="linkColor">
+            <color red="0.0" green="0.47843137254901963" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
 </document>

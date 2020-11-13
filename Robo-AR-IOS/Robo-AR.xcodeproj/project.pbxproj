@@ -15,6 +15,8 @@
 		1F23F2C325509349001DFED1 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1F23F2C125509349001DFED1 /* LaunchScreen.storyboard */; };
 		1F474BAF25565B7800C22F8C /* WaypointView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F474BAE25565B7800C22F8C /* WaypointView.swift */; };
 		1F474BB325565BDB00C22F8C /* WaypointView+Coaching.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F474BB225565BDB00C22F8C /* WaypointView+Coaching.swift */; };
+		1F6CE921255E567500C0B2EC /* Instruction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CE920255E567500C0B2EC /* Instruction.swift */; };
+		1F6CE924255E5AC300C0B2EC /* InstructionTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CE923255E5AC300C0B2EC /* InstructionTableViewController.swift */; };
 		1FA8D2242559175E00DE50E6 /* WaypointList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA8D2232559175E00DE50E6 /* WaypointList.swift */; };
 		1FD5FD892550A8870028A42A /* Waypoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD5FD882550A8870028A42A /* Waypoint.swift */; };
 /* End PBXBuildFile section */
@@ -30,6 +32,8 @@
 		1F23F2C425509349001DFED1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1F474BAE25565B7800C22F8C /* WaypointView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaypointView.swift; sourceTree = "<group>"; };
 		1F474BB225565BDB00C22F8C /* WaypointView+Coaching.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WaypointView+Coaching.swift"; sourceTree = "<group>"; };
+		1F6CE920255E567500C0B2EC /* Instruction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Instruction.swift; sourceTree = "<group>"; };
+		1F6CE923255E5AC300C0B2EC /* InstructionTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstructionTableViewController.swift; sourceTree = "<group>"; };
 		1FA8D2232559175E00DE50E6 /* WaypointList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WaypointList.swift; path = WaypointView/WaypointList.swift; sourceTree = "<group>"; };
 		1FD5FD882550A8870028A42A /* Waypoint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Waypoint.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -74,6 +78,8 @@
 				1F23F2C125509349001DFED1 /* LaunchScreen.storyboard */,
 				1F23F2C425509349001DFED1 /* Info.plist */,
 				1FA8D2232559175E00DE50E6 /* WaypointList.swift */,
+				1F6CE920255E567500C0B2EC /* Instruction.swift */,
+				1F6CE923255E5AC300C0B2EC /* InstructionTableViewController.swift */,
 			);
 			path = "Robo-AR";
 			sourceTree = "<group>";
@@ -164,6 +170,8 @@
 				1FA8D2242559175E00DE50E6 /* WaypointList.swift in Sources */,
 				1F23F2B725509345001DFED1 /* AppDelegate.swift in Sources */,
 				1F23F2BB25509345001DFED1 /* Experience.rcproject in Sources */,
+				1F6CE921255E567500C0B2EC /* Instruction.swift in Sources */,
+				1F6CE924255E5AC300C0B2EC /* InstructionTableViewController.swift in Sources */,
 				1F474BB325565BDB00C22F8C /* WaypointView+Coaching.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

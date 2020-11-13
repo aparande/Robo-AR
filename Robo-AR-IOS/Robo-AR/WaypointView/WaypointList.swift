@@ -9,7 +9,7 @@
 import Foundation
 
 // Linked List of Waypoints
-class WaypointList {
+class WaypointList: Sequence {
     var head: Waypoint?
     var tail: Waypoint?
     
@@ -27,5 +27,23 @@ class WaypointList {
             tail?.next = point
             tail = point
         }
+    }
+    
+    func makeIterator() -> WaypointIterator {
+        return WaypointIterator(withList: self)
+    }
+}
+
+struct WaypointIterator: IteratorProtocol {
+    var current: Waypoint?
+
+    init(withList list: WaypointList) {
+        current = list.head
+    }
+    
+    mutating func next() -> Waypoint? {
+        guard let curr = current else { return nil }
+        current = curr.next
+        return curr
     }
 }
