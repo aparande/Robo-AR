@@ -62,6 +62,6 @@ class Waypoint: Entity, HasModel, HasAnchoring, HasCollision {
     }
     
     private func distanceTo(_ other:Waypoint) -> Float {
-        return other.position(relativeTo: self).magnitude
+        return self.parent!.position(relativeTo: other.parent!).magnitude
     }
 }
