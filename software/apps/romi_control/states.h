@@ -12,6 +12,9 @@
 
 typedef enum {
     OFF=0,
+    WAITING=1,
+    TURNING=2,
+    DRIVING=3
 } states;
 
 #endif /* STATES_H_ */
