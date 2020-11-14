@@ -9,6 +9,7 @@
 import Foundation
 
 struct Instruction {
-    let distance: Float
+    var distance: Float
     var angle: Float = 0
+    var completed = false
 }

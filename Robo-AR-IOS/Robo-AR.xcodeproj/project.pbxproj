@@ -19,6 +19,7 @@
 		1F6CE924255E5AC300C0B2EC /* InstructionTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CE923255E5AC300C0B2EC /* InstructionTableViewController.swift */; };
 		1FA8D2242559175E00DE50E6 /* WaypointList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA8D2232559175E00DE50E6 /* WaypointList.swift */; };
 		1FD5FD892550A8870028A42A /* Waypoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD5FD882550A8870028A42A /* Waypoint.swift */; };
+		1FE4DFD7255F3D9E00EDC1A7 /* InstructionTableViewController+CBCentralDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4DFD6255F3D9E00EDC1A7 /* InstructionTableViewController+CBCentralDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -36,6 +37,7 @@
 		1F6CE923255E5AC300C0B2EC /* InstructionTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstructionTableViewController.swift; sourceTree = "<group>"; };
 		1FA8D2232559175E00DE50E6 /* WaypointList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WaypointList.swift; path = WaypointView/WaypointList.swift; sourceTree = "<group>"; };
 		1FD5FD882550A8870028A42A /* Waypoint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Waypoint.swift; sourceTree = "<group>"; };
+		1FE4DFD6255F3D9E00EDC1A7 /* InstructionTableViewController+CBCentralDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "InstructionTableViewController+CBCentralDelegate.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -80,6 +82,7 @@
 				1FA8D2232559175E00DE50E6 /* WaypointList.swift */,
 				1F6CE920255E567500C0B2EC /* Instruction.swift */,
 				1F6CE923255E5AC300C0B2EC /* InstructionTableViewController.swift */,
+				1FE4DFD6255F3D9E00EDC1A7 /* InstructionTableViewController+CBCentralDelegate.swift */,
 			);
 			path = "Robo-AR";
 			sourceTree = "<group>";
@@ -172,6 +175,7 @@
 				1F23F2BB25509345001DFED1 /* Experience.rcproject in Sources */,
 				1F6CE921255E567500C0B2EC /* Instruction.swift in Sources */,
 				1F6CE924255E5AC300C0B2EC /* InstructionTableViewController.swift in Sources */,
+				1FE4DFD7255F3D9E00EDC1A7 /* InstructionTableViewController+CBCentralDelegate.swift in Sources */,
 				1F474BB325565BDB00C22F8C /* WaypointView+Coaching.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
