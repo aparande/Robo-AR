@@ -39,7 +39,7 @@ static simple_ble_config_t ble_config = {
         // c0:98:e5:49:xx:xx
         .platform_id       = 0x49,    // used as 4th octect in device BLE address
         .device_id         = 0xEEC5, 
-        .adv_name          = "DNEG", // used in advertisements if there is room
+        .adv_name          = "Robo-AR", // used in advertisements if there is room
         .adv_interval      = MSEC_TO_UNITS(1000, UNIT_0_625_MS),
         .min_conn_interval = MSEC_TO_UNITS(100, UNIT_1_25_MS),
         .max_conn_interval = MSEC_TO_UNITS(200, UNIT_1_25_MS),
@@ -53,10 +53,12 @@ static simple_ble_service_t waypoint_service = {{
 
 //Declare characteristics and variables for your service
 static simple_ble_char_t waypoint_char = {.uuid16 = 0xeda1};
+static simple_ble_char_t ack_char = {.uuid16 = 0xeda2};
 simple_ble_app_t* simple_ble_app;
 
 float waypoint[2] = {0, 0};
 bool recieved_point = false;
+int acknowledged = 0;
 states state = OFF;
 //float total_distance = 0;
 float total_distance_left = 0;
@@ -149,6 +151,10 @@ int main(void) {
   simple_ble_add_characteristic(1, 1, 0, 0,
       sizeof(waypoint), (uint8_t*)&waypoint,
       &waypoint_service, &waypoint_char);
+
+  simple_ble_add_characteristic(1, 1, 0, 0, 
+    sizeof(acknowledged), (uint8_t*)&acknowledged, 
+    &waypoint_service, &ack_char);
 
   // Start Advertising
   simple_ble_adv_only_name();
@@ -271,6 +277,7 @@ int main(void) {
         } else if ((fabs(diff_left) < distance_threshold) && (fabs(diff_right) < distance_threshold)) {
             total_distance_left = 0;
             total_distance_right = 0;
+            acknowledged++;
             //total_distance = 0;
             state = WAITING;
         } else {
