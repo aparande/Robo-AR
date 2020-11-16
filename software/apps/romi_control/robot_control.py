@@ -5,6 +5,7 @@ import keyboard
 import argparse
 from getpass import getpass
 from bluepy.btle import Peripheral, DefaultDelegate
+import binascii
 
 parser = argparse.ArgumentParser(description='Print advertisement data from a BLE device')
 parser.add_argument('addr', metavar='address', type=str, help='Address of the form XX:XX:XX:XX:XX:XX')
@@ -30,12 +31,18 @@ class RobotController():
         # get characteristic handles from service/robot
         self.sv = self.robot.getServiceByUUID(SERVICE_UUID)
         self.ch = self.sv.getCharacteristics(CHAR_UUIDS)[0]
+        self.ack = self.sv.getCharacteristics(ACK_UUID)[0]
         #keyboard.hook(self.on_key_event)
 
         while True:
-            r = float(input("Distance (m): "))
-            t = float(input("Angle (degrees): "))
-            self.ch.write(struct.pack('ff', *[r, t]));
+            #ack = int(binascii.b2a_hex(self.ack.read())[:2], 16)
+            ack, = struct.unpack("Bxxx", self.ack.read())
+            if ack==0:
+                r = float(input("Distance (m): "))
+                t = float(input("Angle (degrees): "))
+                self.ch.write(struct.pack('ff', *[r, t]));
+                self.ack.write(struct.pack('Bxxx', *[ack+1]))
+                
 
 #    def on_key_event(self, event):
 #        # print key name

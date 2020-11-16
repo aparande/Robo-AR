@@ -277,7 +277,7 @@ int main(void) {
         } else if ((fabs(diff_left) < distance_threshold) && (fabs(diff_right) < distance_threshold)) {
             total_distance_left = 0;
             total_distance_right = 0;
-            acknowledged++;
+            acknowledged--;
             //total_distance = 0;
             state = WAITING;
         } else {
