@@ -64,15 +64,20 @@ states state = OFF;
 float total_distance_left = 0;
 float total_distance_right = 0;
 
+void readInput() {
+    printf("Bluetooth message recieved\n");
+    if (state == WAITING) {
+        printf("Distance: %f\n", waypoint[0]);
+        printf("Angle: %f\n", waypoint[1]);
+        recieved_point = true;
+    }
+}
+
+
 void ble_evt_write(ble_evt_t const* p_ble_evt) {
     //logic for each characteristic and related state changes
     //Try not to modify the state here...
-        printf("Bluetooth message recieved\n");
-        if (state == WAITING) {
-            printf("Distance: %f\n", waypoint[0]);
-            printf("Angle: %f\n", waypoint[1]);
-            recieved_point = true;
-        }
+    readInput();
 }
 
 void print_state(states current_state){
@@ -239,6 +244,8 @@ int main(void) {
           recieved_point = false;
           lsm9ds1_start_gyro_integration();
           state = TURNING;
+        } else if (acknowledged==1) {
+            readInput();
         } else {
           state = WAITING;
           kobukiDriveDirect(0, 0);
