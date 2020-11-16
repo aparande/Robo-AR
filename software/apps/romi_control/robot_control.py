@@ -15,6 +15,7 @@ if len(addr) != 17:
 
 SERVICE_UUID = "4607eda0-f65e-4d59-a9ff-84420d87a4ca"
 CHAR_UUIDS = "4607eda1-f65e-4d59-a9ff-84420d87a4ca"# add your characteristics
+ACK_UUID = "4607eda2-f65e-4d59-a9ff-84420d87a4ca"# add your characteristics
 
 class RobotController():
 
