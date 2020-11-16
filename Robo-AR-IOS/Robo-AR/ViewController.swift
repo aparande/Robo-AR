@@ -10,9 +10,15 @@ import UIKit
 import RealityKit
 import ARKit
 
-class ViewController: UIViewController {
+enum Mode {
+    case debug, release
+}
+
+class ViewController: BLEViewController {
     @IBOutlet var arView: WaypointView!
     @IBOutlet weak var generateButton: UIButton!
+    
+    let MODE = Mode.release
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -31,13 +37,30 @@ class ViewController: UIViewController {
         generateButton.layer.cornerRadius = 20
     }
     
+    @IBAction func startTransmission(_ sender: Any) {
+        if MODE == .debug {
+            performSegue(withIdentifier: "showInstructions", sender: nil)
+        } else {
+            for waypoint in arView.waypoints {
+                guard let next = waypoint.next else { continue }
+                instructions.append(Instruction(distance: waypoint.distanceTo(next), angle: waypoint.angleTo(next)))
+            }
+            
+            sendNextInstruction()
+        }
+    }
+    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         guard let destination = segue.destination as? InstructionTableViewController else { return }
-        
+
         for waypoint in arView.waypoints {
             guard let next = waypoint.next else { continue }
             destination.instructions.append(Instruction(distance: waypoint.distanceTo(next), angle: waypoint.angleTo(next)))
         }
         
+    }
+    
+    override func discoveredInstructionCharacteristic() {
+        // Do Nothing
     }
 }

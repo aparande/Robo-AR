@@ -31,7 +31,7 @@
                                     <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 </state>
                                 <connections>
-                                    <segue destination="e3b-xW-MF8" kind="show" id="T6P-gs-IHo"/>
+                                    <action selector="startTransmission:" destination="BYZ-38-t0r" eventType="touchUpInside" id="ohF-vV-aMj"/>
                                 </connections>
                             </button>
                         </subviews>
@@ -50,6 +50,7 @@
                     <connections>
                         <outlet property="arView" destination="daP-Rn-669" id="hFD-f3-gQf"/>
                         <outlet property="generateButton" destination="1Ed-kz-DKF" id="lbe-Bj-k81"/>
+                        <segue destination="e3b-xW-MF8" kind="show" identifier="showInstructions" id="BLn-N0-d2A"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
@@ -99,7 +100,7 @@
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iqF-fV-97P" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="983" y="134"/>
+            <point key="canvasLocation" x="1068" y="134"/>
         </scene>
     </scenes>
     <resources>

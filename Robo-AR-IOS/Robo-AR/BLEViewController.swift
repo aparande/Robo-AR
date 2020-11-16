@@ -1,15 +1,53 @@
 //
-//  InstructionTableViewController+CBCentralDelegate.swift
+//  BLEViewController.swift
 //  Robo-AR
 //
-//  Created by Anmol Parande on 11/13/20.
+//  Created by Anmol Parande on 11/15/20.
 //  Copyright © 2020 Anmol Parande. All rights reserved.
 //
 
-import Foundation
+import UIKit
 import CoreBluetooth
 
-extension InstructionTableViewController: CBCentralManagerDelegate {
+class BLEViewController: UIViewController {
+    var instructions: [Instruction] = []
+    var centralManager: CBCentralManager!
+    var romiPeripheral: CBPeripheral!
+    
+    var instructionCharacteristic: CBCharacteristic!
+    
+    let ROMI_NAME = "DNEG"
+    let ROMI_SERVICE_UUID = CBUUID(string: "4607EDA0-F65E-4D59-A9FF-84420D87A4CA")
+    let ROMI_INSTRUCTION_CHARACTERISTIC_UUID = CBUUID(string: "4607EDA1-F65E-4D59-A9FF-84420D87A4CA")
+    
+    var lastExecutedInstruction = -1
+    
+    override func viewDidLoad() {
+        centralManager = CBCentralManager(delegate: self, queue: nil)
+    }
+    
+    func sendNextInstruction() {
+        if lastExecutedInstruction + 1 >= instructions.count {
+            print("Executed all instructions")
+            return
+        }
+        
+        var instruction = instructions[lastExecutedInstruction + 1]
+        var payload = Data(buffer: UnsafeBufferPointer(start: &instruction.distance, count: 1))
+        payload.append(Data(buffer: UnsafeBufferPointer(start: &instruction.angle, count: 1)))
+        
+        romiPeripheral.writeValue(payload, for: instructionCharacteristic, type: CBCharacteristicWriteType.withResponse)
+        
+        lastExecutedInstruction += 1
+        print("Transmitted instruction \(lastExecutedInstruction)")
+    }
+    
+    func discoveredInstructionCharacteristic() {
+        sendNextInstruction()
+    }
+}
+
+extension BLEViewController: CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
           case .unknown:
@@ -44,7 +82,7 @@ extension InstructionTableViewController: CBCentralManagerDelegate {
     }
 }
 
-extension InstructionTableViewController: CBPeripheralDelegate {
+extension BLEViewController: CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         guard let services = peripheral.services else { return }
         for service in services {
@@ -61,7 +99,7 @@ extension InstructionTableViewController: CBPeripheralDelegate {
                 // Kick off the instruction sending process
                 print("Found instruction characteristic")
                 instructionCharacteristic = characteristic
-                sendNextInstruction()
+                discoveredInstructionCharacteristic()
             }
         }
     }
@@ -74,20 +112,5 @@ extension InstructionTableViewController: CBPeripheralDelegate {
             print("Unhandled characteristic UUID: \(characteristic.uuid)")
         }
     }
-    
-    func sendNextInstruction() {
-        if lastExecutedInstruction + 1 >= instructions.count {
-            print("Executed all instructions")
-            return
-        }
-        
-        var instruction = instructions[lastExecutedInstruction + 1]
-        var payload = Data(buffer: UnsafeBufferPointer(start: &instruction.distance, count: 1))
-        payload.append(Data(buffer: UnsafeBufferPointer(start: &instruction.angle, count: 1)))
-        
-        romiPeripheral.writeValue(payload, for: instructionCharacteristic, type: CBCharacteristicWriteType.withResponse)
-        
-        lastExecutedInstruction += 1
-        print("Transmitted instruction \(lastExecutedInstruction)")
-    }
 }
+

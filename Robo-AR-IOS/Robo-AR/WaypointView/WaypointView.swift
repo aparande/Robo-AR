@@ -84,6 +84,6 @@ extension SIMD3 where Scalar == Float {
     func horizontalAngle(to other:SIMD3) -> Float {
         // x axis is oriented such that positive is right
         // z axis is oriented such that positive is towards the user (which is why it is flipped from the angle calculation
-        return atan2f(self.z - other.z, other.x - self.x)
+        return -atan2f(other.x - self.x, self.z - other.z) * 180 / .pi
     }
 }
