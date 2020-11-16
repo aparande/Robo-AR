@@ -39,7 +39,7 @@ class BLEViewController: UIViewController {
         romiPeripheral.writeValue(payload, for: instructionCharacteristic, type: CBCharacteristicWriteType.withResponse)
         
         lastExecutedInstruction += 1
-        print("Transmitted instruction \(lastExecutedInstruction)")
+        print("Transmitted instruction \(lastExecutedInstruction): (\(instructions[lastExecutedInstruction]), ")
     }
     
     func discoveredInstructionCharacteristic() {

@@ -41,23 +41,28 @@ class ViewController: BLEViewController {
         if MODE == .debug {
             performSegue(withIdentifier: "showInstructions", sender: nil)
         } else {
-            for waypoint in arView.waypoints {
-                guard let next = waypoint.next else { continue }
-                instructions.append(Instruction(distance: waypoint.distanceTo(next), angle: waypoint.angleTo(next)))
+            if instructions.isEmpty {
+                instructions = compileInstructions()
             }
-            
             sendNextInstruction()
         }
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         guard let destination = segue.destination as? InstructionTableViewController else { return }
-
+        destination.instructions = compileInstructions()
+    }
+    
+    func compileInstructions() -> [Instruction] {
+        var inst:[Instruction] = []
+        
+        var prevAngle: Float = 0.0
         for waypoint in arView.waypoints {
             guard let next = waypoint.next else { continue }
-            destination.instructions.append(Instruction(distance: waypoint.distanceTo(next), angle: waypoint.angleTo(next)))
+            inst.append(Instruction(distance: waypoint.distanceTo(next), angle: waypoint.angleTo(next) - prevAngle))
+            prevAngle = waypoint.angleTo(next)
         }
-        
+        return inst
     }
     
     override func discoveredInstructionCharacteristic() {
