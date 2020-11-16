@@ -57,7 +57,6 @@ static simple_ble_char_t ack_char = {.uuid16 = 0xeda2};
 simple_ble_app_t* simple_ble_app;
 
 float waypoint[2] = {0, 0};
-bool recieved_point = false;
 int acknowledged = 0;
 states state = OFF;
 //float total_distance = 0;
@@ -69,7 +68,6 @@ void readInput() {
     if (state == WAITING) {
         printf("Distance: %f\n", waypoint[0]);
         printf("Angle: %f\n", waypoint[1]);
-        recieved_point = true;
     }
 }
 
@@ -240,12 +238,11 @@ int main(void) {
       case WAITING: {
         if (is_button_pressed(&sensors)) {
           state = OFF;
-        } else if (recieved_point) {
-          recieved_point = false;
-          lsm9ds1_start_gyro_integration();
-          state = TURNING;
         } else if (acknowledged==1) {
             readInput();
+            lsm9ds1_stop_gyro_integration();
+            lsm9ds1_start_gyro_integration();
+            state = TURNING;
         } else {
           state = WAITING;
           kobukiDriveDirect(0, 0);
