@@ -14,6 +14,8 @@ enum Mode {
     case debug, release
 }
 
+
+
 class ViewController: BLEViewController {
     @IBOutlet var arView: WaypointView!
     @IBOutlet weak var generateButton: UIButton!
@@ -26,10 +28,16 @@ class ViewController: BLEViewController {
         arView.addCoaching()
         arView.setupGestures()
         
-        let config = ARWorldTrackingConfiguration()
-        config.planeDetection = .horizontal
-        arView.session.run(config, options: [.resetTracking, .removeExistingAnchors])
+        guard let referenceImages = ARReferenceImage.referenceImages(inGroupNamed: "AR Resources", bundle: nil) else {
+            fatalError("Missing expected asset catalog resources.")
+        }
         
+        let config = ARWorldTrackingConfiguration()
+        config.detectionImages = referenceImages
+        config.planeDetection = .horizontal
+        
+        arView.session.delegate = self
+        arView.session.run(config, options: [.resetTracking, .removeExistingAnchors])
         arView.debugOptions.insert(.showSceneUnderstanding)
         arView.debugOptions.insert(.showWorldOrigin)
         //arView.debugOptions.insert(.showAnchorGeometry)
@@ -67,5 +75,23 @@ class ViewController: BLEViewController {
     
     override func discoveredInstructionCharacteristic() {
         // Do Nothing
+    }
+}
+
+extension ViewController: ARSessionDelegate {
+    
+    func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
+        print("Entered Session Function")
+        print(anchors.count)
+        guard let objectAnchor = anchors.first as? ARImageAnchor,
+              let _ = objectAnchor.referenceImage.name
+        else { return }
+        
+        
+        print("FOUND ANCHOR")
+        let anchor = AnchorEntity(anchor: objectAnchor)
+        print(anchor.transform.rotation)
+        arView.scene.anchors.append(anchor)
+       
     }
 }
