@@ -68,6 +68,7 @@ void readInput() {
     if (state == WAITING) {
         printf("Distance: %f\n", waypoint[0]);
         printf("Angle: %f\n", waypoint[1]);
+        acknowledged = 1;
     }
 }
 
@@ -82,7 +83,7 @@ void print_state(states current_state){
     char buf[16];
 	switch(current_state){
 	case OFF: {
-		display_write("OFF", DISPLAY_LINE_0);
+		display_write("BAR", DISPLAY_LINE_0);
         snprintf(buf, 16, "", waypoint[1]);
 		display_write(buf, DISPLAY_LINE_1);
 		break;
@@ -151,11 +152,11 @@ int main(void) {
   simple_ble_add_service(&waypoint_service);
 
   //Register your characteristics
-  simple_ble_add_characteristic(1, 1, 0, 0,
+  simple_ble_add_characteristic(0, 1, 0, 0,
       sizeof(waypoint), (uint8_t*)&waypoint,
       &waypoint_service, &waypoint_char);
 
-  simple_ble_add_characteristic(1, 1, 0, 0, 
+  simple_ble_add_characteristic(1, 1, 1, 0, 
     sizeof(acknowledged), (uint8_t*)&acknowledged, 
     &waypoint_service, &ack_char);
 
@@ -239,7 +240,6 @@ int main(void) {
         if (is_button_pressed(&sensors)) {
           state = OFF;
         } else if (acknowledged==1) {
-            readInput();
             lsm9ds1_stop_gyro_integration();
             lsm9ds1_start_gyro_integration();
             state = TURNING;
@@ -281,7 +281,7 @@ int main(void) {
         } else if ((fabs(diff_left) < distance_threshold) && (fabs(diff_right) < distance_threshold)) {
             total_distance_left = 0;
             total_distance_right = 0;
-            acknowledged--;
+            acknowledged = 0;
             //total_distance = 0;
             state = WAITING;
         } else {
