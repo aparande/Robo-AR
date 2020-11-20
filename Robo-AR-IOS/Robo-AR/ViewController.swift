@@ -90,7 +90,7 @@ extension ViewController: ARSessionDelegate {
         
         print("FOUND ANCHOR")
         let anchor = AnchorEntity(anchor: objectAnchor)
-        print(anchor.transform.rotation)
+        print(anchor.orientation)
         arView.scene.anchors.append(anchor)
        
     }
