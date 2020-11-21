@@ -46,7 +46,7 @@ static simple_ble_config_t ble_config = {
 };
 
 //4607eda0-f65e-4d59-a9ff-84420d87a4ca
-static simple_ble_service_t waypoint_service = {{
+static simple_ble_service_t robot_service = {{
     .uuid128 = {0xca,0xa4,0x87,0x0d,0x42,0x84,0xff,0xA9,
                 0x59,0x4D,0x5e,0xf6,0xa0,0xed,0x07,0x46}
 }};
@@ -149,16 +149,16 @@ int main(void) {
   // Setup BLE
   simple_ble_app = simple_ble_init(&ble_config);
 
-  simple_ble_add_service(&waypoint_service);
+  simple_ble_add_service(&robot_service);
 
   //Register your characteristics
   simple_ble_add_characteristic(0, 1, 0, 0,
       sizeof(waypoint), (uint8_t*)&waypoint,
-      &waypoint_service, &waypoint_char);
+      &robot_service, &waypoint_char);
 
   simple_ble_add_characteristic(1, 0, 1, 0, 
     sizeof(acknowledged), (uint8_t*)&acknowledged, 
-    &waypoint_service, &ack_char);
+    &robot_service, &ack_char);
   
   // Start Advertising
   simple_ble_adv_only_name();
