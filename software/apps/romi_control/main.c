@@ -37,7 +37,7 @@ KobukiSensors_t sensors = {0};
 // Intervals for advertising and connections
 static simple_ble_config_t ble_config = {
         // c0:98:e5:49:xx:xx
-        .platform_id       = 0x49,    // used as 4th octect in device BLE address
+        .platform_id       = 0x46,    // used as 4th octect in device BLE address
         .device_id         = 0xEEC5, 
         .adv_name          = "Robo-AR", // used in advertisements if there is room
         .adv_interval      = MSEC_TO_UNITS(1000, UNIT_0_625_MS),
@@ -83,7 +83,7 @@ void print_state(states current_state){
     char buf[16];
 	switch(current_state){
 	case OFF: {
-		display_write("BAR", DISPLAY_LINE_0);
+		display_write("OFF", DISPLAY_LINE_0);
         snprintf(buf, 16, "", waypoint[1]);
 		display_write(buf, DISPLAY_LINE_1);
 		break;
@@ -156,10 +156,10 @@ int main(void) {
       sizeof(waypoint), (uint8_t*)&waypoint,
       &waypoint_service, &waypoint_char);
 
-  simple_ble_add_characteristic(1, 1, 1, 0, 
+  simple_ble_add_characteristic(1, 0, 1, 0, 
     sizeof(acknowledged), (uint8_t*)&acknowledged, 
     &waypoint_service, &ack_char);
-
+  
   // Start Advertising
   simple_ble_adv_only_name();
 
@@ -282,6 +282,7 @@ int main(void) {
             total_distance_left = 0;
             total_distance_right = 0;
             acknowledged = 0;
+            simple_ble_notify_char(&ack_char);
             //total_distance = 0;
             state = WAITING;
         } else {
