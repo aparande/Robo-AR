@@ -113,8 +113,6 @@ extension BLEViewController: CBPeripheralDelegate {
                 print("Found acknowledge characteristic")
                 acknowledgeCharacteristic = characteristic
                 romiPeripheral?.setNotifyValue(true, for: characteristic)
-                print(acknowledgeCharacteristic?.properties.contains(.notify))
-                romiPeripheral?.discoverDescriptors(for: characteristic)
             }
         }
     }
@@ -125,17 +123,24 @@ extension BLEViewController: CBPeripheralDelegate {
             print(characteristic.value ?? "No value for instruction")
         case BLEViewController.ROMI_ACKNOWLEDGE_CHARACTERISTIC_UUID:
             print(characteristic.value ?? "No value for acknowledge")
+            guard let acknowledge = characteristic.value?.withUnsafeBytes({
+                (pointer: UnsafePointer<Int>) -> Int in
+                return pointer.pointee
+            }) else { print("Couldn't get characteristic value"); return; }
+            
+            if acknowledge == 0 && lastExecutedInstruction >= 0 {
+                instructions[lastExecutedInstruction].completed = true
+                sendNextInstruction()
+            } else {
+                print("Romi Received Instruction!")
+            }
         default:
             print("Unhandled characteristic UUID: \(characteristic.uuid)")
         }
     }
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
-        print("Updated characteristic notification \(characteristic) \(error)")
-    }
-    
-    func peripheral(_ peripheral: CBPeripheral, didDiscoverDescriptorsFor characteristic: CBCharacteristic, error: Error?) {
-        print(characteristic.descriptors)
+        print(characteristic, error)
     }
 }
 
