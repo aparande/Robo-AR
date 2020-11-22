@@ -14,7 +14,9 @@ if len(addr) != 17:
     raise ValueError("Invalid address supplied")
 
 SERVICE_UUID = "4607eda0-f65e-4d59-a9ff-84420d87a4ca"
-CHAR_UUIDS = "4607eda1-f65e-4d59-a9ff-84420d87a4ca"# add your characteristics
+CHAR_UUID = "4607eda1-f65e-4d59-a9ff-84420d87a4ca"# add your characteristics
+DATA_UUID = "4607eda2-f65e-4d59-a9ff-84420d87a4ca"# add your characteristics
+ACK_UUID = "4607eda3-f65e-4d59-a9ff-84420d87a4ca"# add your characteristics
 
 class RobotController():
 
@@ -28,14 +30,20 @@ class RobotController():
         # get service from robot
         # get characteristic handles from service/robot
         self.sv = self.robot.getServiceByUUID(SERVICE_UUID)
-        self.ch = self.sv.getCharacteristics(CHAR_UUIDS)[0]
+        self.ch = self.sv.getCharacteristics(CHAR_UUID)[0]
+        self.data = self.sv.getCharacteristics(DATA_UUID)[0]
+        self.ack = self.sv.getCharacteristics(ACK_UUID)[0]
         #keyboard.hook(self.on_key_event)
-
         while True:
-            ls = float(input("Left Speed: "))
-            rs = float(input("Right Speed: "))
-            t = float(input("Time (float seconds): "))
-            self.ch.write(struct.pack('fff', *[ls, rs, t]));
+            ack = struct.unpack("B", self.ack.read())[0]
+            print(struct.unpack("fff", self.data.read()))
+            if (ack==0):
+                ls = float(input("Left Speed: "))
+                rs = float(input("Right Speed: "))
+                t = float(input("Time (float seconds): "))
+                self.ch.write(struct.pack('fff', *[ls, rs, t]));
+                while ack != 1:
+                    ack = struct.unpack("B", self.ack.read())[0]
 
 #    def on_key_event(self, event):
 #        # print key name
