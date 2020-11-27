@@ -113,6 +113,8 @@ extension BLEViewController: CBPeripheralDelegate {
                 print("Found acknowledge characteristic")
                 acknowledgeCharacteristic = characteristic
                 romiPeripheral?.setNotifyValue(true, for: characteristic)
+                print(acknowledgeCharacteristic?.properties.contains(.notify))
+                romiPeripheral?.discoverDescriptors(for: characteristic)
             }
         }
     }
@@ -140,7 +142,11 @@ extension BLEViewController: CBPeripheralDelegate {
     }
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
-        print(characteristic, error)
+        print("Updated characteristic notification \(characteristic) \(error)")
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverDescriptorsFor characteristic: CBCharacteristic, error: Error?) {
+        print(characteristic.descriptors)
     }
 }
 
