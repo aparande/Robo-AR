@@ -1,27 +1,10 @@
+
 import UIKit
 import RealityKit
 
-class Waypoint: Entity, HasModel, HasAnchoring, HasCollision {
-    let number: Int
-    var next: Waypoint? {
-        didSet {
-            // Construct the line from this waypoint to the next
-            guard let next = next else { return }
-            next.prev = self
-            print("Distance from \(number) to \(next.number) is \(distanceTo(next))")
-        }
-    }
+class RoboWaypoint: Entity, HasModel, HasAnchoring, HasCollision {
     
-    var prev: Waypoint?
-    
-    var isTerminal: Bool {
-        get {
-            return prev == nil
-        }
-    }
-    
-    required init(color: UIColor, number: Int) {
-        self.number = number
+    required init(color: UIColor) {
         super.init()
         
         self.components[ModelComponent] = ModelComponent(
@@ -50,7 +33,7 @@ class Waypoint: Entity, HasModel, HasAnchoring, HasCollision {
     
     private func constructText() {
         let mesh = MeshResource.generateText(
-            "\(self.number)",
+            "ROBOT",
             extrusionDepth: 0.1,
             font: .systemFont(ofSize: 2),
             containerFrame: .zero,
@@ -62,7 +45,6 @@ class Waypoint: Entity, HasModel, HasAnchoring, HasCollision {
         entity.scale = SIMD3<Float>(0.01, 0.01, 0.03)
         entity.setPosition(SIMD3<Float>(0.02, 0.04, 0), relativeTo: self)
         entity.setOrientation(simd_quatf(angle: -.pi/4, axis: [0, 0, 1]), relativeTo: self)
-        
         self.addChild(entity)
     }
 }

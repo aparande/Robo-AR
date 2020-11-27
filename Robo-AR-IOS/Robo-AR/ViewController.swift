@@ -34,6 +34,7 @@ class ViewController: BLEViewController {
         
         let config = ARWorldTrackingConfiguration()
         config.detectionImages = referenceImages
+        config.maximumNumberOfTrackedImages = 1
         config.planeDetection = .horizontal
         
         arView.session.delegate = self
@@ -81,17 +82,17 @@ class ViewController: BLEViewController {
 extension ViewController: ARSessionDelegate {
     
     func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
-        print("Entered Session Function")
-        print(anchors.count)
-        guard let objectAnchor = anchors.first as? ARImageAnchor,
-              let _ = objectAnchor.referenceImage.name
+        guard let imageAnchor = anchors.first as? ARImageAnchor,
+              let _ = imageAnchor.referenceImage.name
         else { return }
-        
-        
-        print("FOUND ANCHOR")
-        let anchor = AnchorEntity(anchor: objectAnchor)
-        print(anchor.transform.rotation)
-        arView.scene.anchors.append(anchor)
-       
+        print(imageAnchor.transform)
+        arView.addRobot(anchor: imageAnchor)
+    }
+    
+    func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
+        guard let imageAnchor = anchors.first as? ARImageAnchor,
+              let _ = imageAnchor.referenceImage.name
+        else { return }
+        arView.updateRobot(anchor: imageAnchor)
     }
 }
