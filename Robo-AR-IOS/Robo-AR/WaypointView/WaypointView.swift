@@ -16,6 +16,7 @@ class WaypointView: ARView {
     var waypointCount: Int = 0
     var coachingOverlay: ARCoachingOverlayView!
     var selectedEntity: Entity?
+    var robot: RoboWaypoint?
     
     var waypoints: WaypointList = WaypointList()
 
@@ -62,6 +63,8 @@ class WaypointView: ARView {
         }
 
         var transformation = Transform(matrix: result.worldTransform)
+        print("Waypoint Transform")
+        print(transformation.matrix)
         transformation.translation += [0, 0.1, 0]
         let box = Waypoint(color: .systemBlue, number: waypointCount)
         self.installGestures(for: box)
@@ -72,10 +75,40 @@ class WaypointView: ARView {
         let raycastAnchor = AnchorEntity(raycastResult: result)
         raycastAnchor.addChild(box)
         self.scene.addAnchor(raycastAnchor)
-
+        print(raycastAnchor.transform.matrix)
         waypointCount += 1
         
         waypoints.insert(box)
+    }
+    
+    func addRobot(anchor: ARImageAnchor){
+        
+        var transformation = Transform(matrix: anchor.transform)
+        transformation.translation += [0, 0.02, 0]
+        let roboBox = RoboWaypoint(color: .systemRed)
+        
+        roboBox.transform = transformation
+        roboBox.orientation = simd_quatf(angle: .pi/4, axis: [0, 0, 1])
+
+        let robotEntity = AnchorEntity(anchor: anchor)
+        robotEntity.addChild(roboBox)
+        self.scene.addAnchor(robotEntity)
+        self.robot = roboBox
+        print("Anchor Added")
+    }
+    
+    func updateRobot(anchor: ARImageAnchor){
+        
+        var transformation = Transform(matrix: anchor.transform)
+        transformation.translation += [0, 0.02, 0]
+        
+        if(robot == nil){
+            self.addRobot(anchor: anchor)
+            return
+        }
+        
+        robot!.transform = transformation
+        robot!.orientation = simd_quatf(angle: .pi/4, axis: [0, 0, 1])
     }
 }
 

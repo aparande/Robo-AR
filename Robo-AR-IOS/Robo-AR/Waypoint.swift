@@ -35,11 +35,6 @@ class Waypoint: Entity, HasModel, HasAnchoring, HasCollision {
         constructText()
     }
     
-    convenience init(color: UIColor, position: SIMD3<Float>, number: Int) {
-        self.init(color: color, number: number)
-        self.position = position
-    }
-    
     required init() {
         fatalError("init() has not been implemented")
     }
