@@ -10,6 +10,7 @@
 #include "app_timer.h"
 #include "nrf.h"
 #include "nrf_delay.h"
+#include "nrf_drv_clock.h"
 #include "nrf_gpio.h"
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
@@ -28,50 +29,56 @@
 
 #include "states.h"
 
+
 // I2C manager
 NRF_TWI_MNGR_DEF(twi_mngr_instance, 5, 0);
 
 // global variables
 KobukiSensors_t sensors = {0};
+const float CLOCK_FREQ = 32768.0;
 
 // Intervals for advertising and connections
 static simple_ble_config_t ble_config = {
         // c0:98:e5:49:xx:xx
-        .platform_id       = 0x46,    // used as 4th octect in device BLE address
+        .platform_id       = 0x49,    // used as 4th octect in device BLE address
         .device_id         = 0xEEC5, 
-        .adv_name          = "Robo-AR", // used in advertisements if there is room
+        .adv_name          = "DNEG", // used in advertisements if there is room
         .adv_interval      = MSEC_TO_UNITS(1000, UNIT_0_625_MS),
         .min_conn_interval = MSEC_TO_UNITS(100, UNIT_1_25_MS),
         .max_conn_interval = MSEC_TO_UNITS(200, UNIT_1_25_MS),
 };
 
 //4607eda0-f65e-4d59-a9ff-84420d87a4ca
-static simple_ble_service_t robot_service = {{
+static simple_ble_service_t drive_command_service = {{
     .uuid128 = {0xca,0xa4,0x87,0x0d,0x42,0x84,0xff,0xA9,
                 0x59,0x4D,0x5e,0xf6,0xa0,0xed,0x07,0x46}
 }};
 
 //Declare characteristics and variables for your service
-static simple_ble_char_t waypoint_char = {.uuid16 = 0xeda1};
-static simple_ble_char_t ack_char = {.uuid16 = 0xeda2};
+static simple_ble_char_t drive_command_char = {.uuid16 = 0xeda1};
+static simple_ble_char_t drive_distance_char = {.uuid16 = 0xeda2};
+static simple_ble_char_t ack_char = {.uuid16 = 0xeda3};
 simple_ble_app_t* simple_ble_app;
 
-float waypoint[2] = {0, 0};
-int acknowledged = 0;
+//drivecommand for romi: left motor input, right motor input, time
+//should really be using a struct for this... motor inputs have to be int16_t. Time is float.
+//Right now I just case motor inputs to int16_t before they get used.
+float drive_command[3] = {0, 0, 0};
+//distance driven by both wheels: left distance, right distance, time
+float drive_distance[3] = {0, 0, 0};
+uint8_t acknowledged = 0;
 states state = OFF;
-//float total_distance = 0;
-float total_distance_left = 0;
-float total_distance_right = 0;
+uint32_t start_ticks = 0;
 
 void readInput() {
     printf("Bluetooth message recieved\n");
     if (state == WAITING) {
-        printf("Distance: %f\n", waypoint[0]);
-        printf("Angle: %f\n", waypoint[1]);
+        printf("Left Input: %f\n", drive_command[0]);
+        printf("Right Input: %f\n", drive_command[1]);
+        printf("Time: %f\n", drive_command[2]);
         acknowledged = 1;
     }
 }
-
 
 void ble_evt_write(ble_evt_t const* p_ble_evt) {
     //logic for each characteristic and related state changes
@@ -79,37 +86,6 @@ void ble_evt_write(ble_evt_t const* p_ble_evt) {
     readInput();
 }
 
-void print_state(states current_state){
-    char buf[16];
-	switch(current_state){
-	case OFF: {
-		display_write("OFF", DISPLAY_LINE_0);
-        snprintf(buf, 16, "", waypoint[1]);
-		display_write(buf, DISPLAY_LINE_1);
-		break;
-      }
-	case WAITING: {
-		display_write("WAITING", DISPLAY_LINE_0);
-        snprintf(buf, 16, "", waypoint[1]);
-		display_write(buf, DISPLAY_LINE_1);
-		break;
-    }
-	case TURNING: {
-        snprintf(buf, 16, "TURN TARGET: %f", waypoint[1]);
-        display_write(buf, DISPLAY_LINE_0);
-        snprintf(buf, 16, "ANGLE CUR: %f", lsm9ds1_read_gyro_integration().z_axis);
-		display_write(buf, DISPLAY_LINE_1);
-		break;
-    }
-	case DRIVING: {
-        snprintf(buf, 16, "TARGET: %.2f", waypoint[0]);
-		display_write(buf, DISPLAY_LINE_0);
-        snprintf(buf, 16, "L: %.2f R: %.2f", total_distance_left, total_distance_right);
-		display_write(buf, DISPLAY_LINE_1);
-		break;
-    }
-   }
-}
 
 static float measure_distance(uint16_t current_encoder, uint16_t previous_encoder) {
   const float CONVERSION = 0.0006108;
@@ -137,6 +113,42 @@ static float measure_distance(uint16_t current_encoder, uint16_t previous_encode
   return val;
 }
 
+static float measure_time(void) {
+    uint32_t cur_ticks = app_timer_cnt_get();
+    uint32_t tick_diff = app_timer_cnt_diff_compute(cur_ticks, start_ticks);
+    float time = tick_diff/CLOCK_FREQ;
+    return time;
+}
+
+void print_state(states current_state){
+    char buf[16];
+	switch(current_state){
+	case OFF: {
+		display_write("OFF", DISPLAY_LINE_0);
+        snprintf(buf, 16, "");
+		display_write(buf, DISPLAY_LINE_1);
+		break;
+      }
+	case WAITING: {
+		display_write("WAITING", DISPLAY_LINE_0);
+        snprintf(buf, 16, "");
+		display_write(buf, DISPLAY_LINE_1);
+		break;
+    }
+	case DRIVING: {
+        snprintf(buf, 16, "Time Left: %.2f", drive_command[2] - measure_time());
+		display_write(buf, DISPLAY_LINE_0);
+        snprintf(buf, 16, "L: %.2f R: %.2f", drive_distance[0], drive_distance[1]);
+		display_write(buf, DISPLAY_LINE_1);
+		break;
+    }
+   }
+}
+
+static void single_shot_timer_handler(void * p_context)
+{
+    printf("Dummy fired!\n");
+}
 int main(void) {
   ret_code_t error_code = NRF_SUCCESS;
 
@@ -149,17 +161,21 @@ int main(void) {
   // Setup BLE
   simple_ble_app = simple_ble_init(&ble_config);
 
-  simple_ble_add_service(&robot_service);
+  simple_ble_add_service(&drive_command_service);
 
   //Register your characteristics
-  simple_ble_add_characteristic(0, 1, 0, 0,
-      sizeof(waypoint), (uint8_t*)&waypoint,
-      &robot_service, &waypoint_char);
+  simple_ble_add_characteristic(1, 1, 0, 0,
+      sizeof(drive_command), (uint8_t*)&drive_command,
+      &drive_command_service, &drive_command_char);
 
-  simple_ble_add_characteristic(1, 0, 1, 0, 
-    sizeof(acknowledged), (uint8_t*)&acknowledged, 
-    &robot_service, &ack_char);
-  
+  simple_ble_add_characteristic(1, 0, 1, 0,
+      sizeof(drive_distance), (uint8_t*)&drive_distance,
+      &drive_command_service, &drive_distance_char);
+
+  simple_ble_add_characteristic(1, 0, 1, 0,
+      sizeof(acknowledged), (uint8_t*)&acknowledged,
+      &drive_command_service, &ack_char);
+
   // Start Advertising
   simple_ble_adv_only_name();
 
@@ -206,9 +222,22 @@ int main(void) {
   kobukiInit();
   printf("Kobuki initialized!\n");
 
+  nrf_drv_clock_init();
+  //APP_ERROR_CHECK(err_code);
+  nrf_drv_clock_lfclk_request(NULL);  
+  error_code = app_timer_init();
+  APP_ERROR_CHECK(error_code);
 
-  float angle_threshold = .5;
-  float distance_threshold = .02;
+  //Need to make a timer for a dumb reason
+  APP_TIMER_DEF(m_single_shot_timer_id);
+  error_code = app_timer_create(&m_single_shot_timer_id,
+                   APP_TIMER_MODE_SINGLE_SHOT,
+                   single_shot_timer_handler);
+  APP_ERROR_CHECK(error_code);
+  error_code = app_timer_start(m_single_shot_timer_id, APP_TIMER_TICKS(100000), NULL);
+  APP_ERROR_CHECK(error_code);
+  printf("Timer initialized!\n");
+
   float encoder_prev_left = 0;
   float encoder_prev_right = 0;
   float encoder_cur_left = 0;
@@ -223,7 +252,6 @@ int main(void) {
     // switch into appropriate states
     // OFF - No response to any signals until button pressed to go to WAITING
     // WAITING - Do nothing until waypoint is recieved. Then go to TURNING
-    // Turning - Turn amount specified by waypoint. Then go DRIVING
     // Driving - Drive the amount specified by waypoint. Then go back to WAITING
     switch(state) {
       case OFF: {
@@ -238,70 +266,46 @@ int main(void) {
       }
       case WAITING: {
         if (is_button_pressed(&sensors)) {
+          nrf_gpio_pin_set(23);
           state = OFF;
         } else if (acknowledged==1) {
-            lsm9ds1_stop_gyro_integration();
-            lsm9ds1_start_gyro_integration();
-            state = TURNING;
+          nrf_gpio_pin_clear(24);
+          encoder_prev_left = sensors.leftWheelEncoder;
+          encoder_prev_right = sensors.rightWheelEncoder;
+          start_ticks = app_timer_cnt_get();
+          state = DRIVING;
         } else {
           state = WAITING;
           kobukiDriveDirect(0, 0);
         }
         break;
       }
-      case TURNING: {
-        float current_angle = lsm9ds1_read_gyro_integration().z_axis;
-        float diff = waypoint[1] - current_angle;
-        if (is_button_pressed(&sensors)) {
-          lsm9ds1_stop_gyro_integration();
-          state = OFF;
-        } else if (fabs(diff) < angle_threshold) {
-            lsm9ds1_stop_gyro_integration();
-            encoder_prev_left = sensors.leftWheelEncoder;
-            encoder_prev_right = sensors.rightWheelEncoder;
-            state = DRIVING;
-        }
-        else {
-          state = TURNING;
-          int8_t sign = (2 * (diff > 0)) - 1;
-          int16_t speed = sign * fmax(.8 * fabs(diff), 50);
-          kobukiDriveDirect(-speed, speed);
-        }
-        break;
-      }
       case DRIVING: {
-        float diff_left = waypoint[0] - total_distance_left;
-        float diff_right = waypoint[0] - total_distance_right;
-        float wheel_diff = total_distance_left - total_distance_right;
+        float cur_time = measure_time();
         if (is_button_pressed(&sensors)) {
-            total_distance_left = 0;
-            total_distance_right = 0;
-            //total_distance = 0;
-          state = OFF;
-        } else if ((fabs(diff_left) < distance_threshold) && (fabs(diff_right) < distance_threshold)) {
-            total_distance_left = 0;
-            total_distance_right = 0;
-            acknowledged = 0;
-            simple_ble_notify_char(&ack_char);
-            //total_distance = 0;
+            nrf_gpio_pin_set(23);
+            nrf_gpio_pin_set(24);
+            drive_distance[0] = 0;
+            drive_distance[1] = 0;
+            drive_distance[2] = 0;
+            state = OFF;
+        } else if (cur_time > drive_command[2]) {
+            nrf_gpio_pin_set(24);
+            drive_distance[0] = 0;
+            drive_distance[1] = 0;
+            drive_distance[2] = 0;
+            acknowledged=0;
             state = WAITING;
         } else {
           state = DRIVING;
           encoder_cur_left = sensors.leftWheelEncoder;
           encoder_cur_right = sensors.rightWheelEncoder;
-          total_distance_left += measure_distance(encoder_cur_left, encoder_prev_left);
-          total_distance_right += measure_distance(encoder_cur_right, encoder_prev_right);
-          //total_distance = (.5 * total_distance_left) + (.5 * total_distance_right);
+          drive_distance[0] += measure_distance(encoder_cur_left, encoder_prev_left);
+          drive_distance[1] += measure_distance(encoder_cur_right, encoder_prev_right);
+          drive_distance[2] = cur_time;
           encoder_prev_left = encoder_cur_left;
           encoder_prev_right = encoder_cur_right;
-          int8_t sign_left = (2 * (diff_left > 0)) - 1;
-          //Wheel diff might not work if backwards :(
-          int16_t speed_left =  sign_left * fmax(110 * fabs(diff_left), 30) - 250 * wheel_diff;
-          //int16_t speed_left =  sign_left * fmax(-220 * wheel_diff, 40);
-          int8_t sign_right = (2 * (diff_right > 0)) - 1;
-          int16_t speed_right = sign_right * fmax(110 * fabs(diff_right), 50) + 250 * wheel_diff;
-          kobukiDriveDirect(speed_left, speed_right);
-          //kobukiDriveDirect(speed_left , sign_right * 80);
+          kobukiDriveDirect((int16_t) drive_command[0], (int16_t) drive_command[1]);
         }
         break;
       }

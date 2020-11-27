@@ -10,6 +10,8 @@ import UIKit
 import ARKit
 import RealityKit
 
+
+
 class WaypointView: ARView {
     var waypointCount: Int = 0
     var coachingOverlay: ARCoachingOverlayView!
@@ -21,6 +23,7 @@ class WaypointView: ARView {
         let tap = UITapGestureRecognizer(target: self, action: #selector(self.handleTap(_:)))
         self.addGestureRecognizer(tap)
     }
+    
 
     @objc func handleTap(_ sender: UITapGestureRecognizer? = nil) {
         guard let touchInView = sender?.location(in: self) else {

@@ -125,6 +125,17 @@ extension BLEViewController: CBPeripheralDelegate {
             print(characteristic.value ?? "No value for instruction")
         case BLEViewController.ROMI_ACKNOWLEDGE_CHARACTERISTIC_UUID:
             print(characteristic.value ?? "No value for acknowledge")
+            guard let acknowledge = characteristic.value?.withUnsafeBytes({
+                (pointer: UnsafePointer<Int>) -> Int in
+                return pointer.pointee
+            }) else { print("Couldn't get characteristic value"); return; }
+            
+            if acknowledge == 0 && lastExecutedInstruction >= 0 {
+                instructions[lastExecutedInstruction].completed = true
+                sendNextInstruction()
+            } else {
+                print("Romi Received Instruction!")
+            }
         default:
             print("Unhandled characteristic UUID: \(characteristic.uuid)")
         }
