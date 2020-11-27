@@ -62,6 +62,7 @@ states state = OFF;
 //float total_distance = 0;
 float total_distance_left = 0;
 float total_distance_right = 0;
+bool connected = false;
 
 void readInput() {
     printf("Bluetooth message recieved\n");
@@ -70,6 +71,10 @@ void readInput() {
         printf("Angle: %f\n", waypoint[1]);
         acknowledged = 1;
     }
+}
+
+ble_evt_connected(ble_evt_t const* p_ble_evt) {
+    connected = true;
 }
 
 
@@ -227,7 +232,7 @@ int main(void) {
     // Driving - Drive the amount specified by waypoint. Then go back to WAITING
     switch(state) {
       case OFF: {
-        if (is_button_pressed(&sensors)) {
+        if (is_button_pressed(&sensors) || connected) {
           nrf_gpio_pin_clear(23);
           state = WAITING;
         } else {
