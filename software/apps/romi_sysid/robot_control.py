@@ -64,7 +64,7 @@ class RobotController():
                 print("Ack val: {}".format(ack))
                 if ack==0:
                    if self.data_list:
-                       self.write_data("{}_{}".format(name, i))
+                       self.write_data(ls, rs, "{}_{}".format(name, i))
                        self.data_list = []
                        break
                    input("Ready?") 
@@ -85,14 +85,17 @@ class RobotController():
     def send_command(self, ls, rs, t):
         self.ch.write(struct.pack('fff', *[ls, rs, t]))
 
-    def write_data(self, name):
+    def write_data(self, ls, rs, name):
+        left_input = [ls] * (len(self.data_list)//3)
+        right_input = [rs] * (len(self.data_list)//3)
         left_dists = self.data_list[::3]
         right_dists = self.data_list[1::3]
         times = self.data_list[2::3]
-        header = ["left_distance", "right_distance", "time"]
-        all_data = [left_dists, right_dists, times]
+        header = ["left_input", "right_input", "left_distance", "right_distance", "time"]
+        all_data = [left_input, right_input, left_dists, right_dists, times]
         df = pd.DataFrame(all_data).transpose()
         df.columns = header
+        print(df)
         df.to_csv("data/{}.csv".format(name), index=False)
 
 #    def on_key_event(self, event):
