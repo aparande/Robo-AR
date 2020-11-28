@@ -9,6 +9,8 @@
 import UIKit
 import RealityKit
 import ARKit
+import CoreBluetooth
+
 
 enum Mode {
     case debug, release
@@ -41,7 +43,6 @@ class ViewController: BLEViewController {
         arView.session.run(config, options: [.resetTracking, .removeExistingAnchors])
         arView.debugOptions.insert(.showSceneUnderstanding)
         arView.debugOptions.insert(.showWorldOrigin)
-        //arView.debugOptions.insert(.showAnchorGeometry)
         
         generateButton.layer.cornerRadius = 20
     }
@@ -50,28 +51,74 @@ class ViewController: BLEViewController {
         if MODE == .debug {
             performSegue(withIdentifier: "showInstructions", sender: nil)
         } else {
-            if instructions.isEmpty {
-                instructions = compileInstructions()
+            let inst = compileNextInstruction()
+            if(inst != nil){
+                sendNextInstruction(instruction: inst!)
             }
-            sendNextInstruction()
         }
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         guard let destination = segue.destination as? InstructionTableViewController else { return }
-        destination.instructions = compileInstructions()
+        destination.instructions = instructions
     }
     
-    func compileInstructions() -> [Instruction] {
-        var inst:[Instruction] = []
+    override func compileNextInstruction() -> Instruction? {
         
-        var prevAngle: Float = 0.0
-        for waypoint in arView.waypoints {
-            guard let next = waypoint.next else { continue }
-            inst.append(Instruction(distance: waypoint.distanceTo(next), angle: waypoint.angleTo(next) - prevAngle))
-            prevAngle = waypoint.angleTo(next)
+        if(arView.robot == nil){
+            return nil
         }
-        return inst
+        if(arView.currentWayPoint == nil){
+            arView.currentWayPoint = arView.waypoints.head
+        }
+        else {
+            print("DISTANCE")
+            print(arView.robot!.distanceTo(arView.currentWayPoint!))
+            
+            if(arView.robot!.distanceTo(arView.currentWayPoint!) < 0.05){
+                arView.currentWayPoint = arView.currentWayPoint!.next
+            }
+        }
+        
+        if(arView.currentWayPoint == nil) {
+            return nil
+        }
+        
+        let waypoint = arView.currentWayPoint!
+        let robot = arView.robot!
+        
+        print("ANGLE")
+        print(robot.angleTo(waypoint))
+        print("Distance")
+        print(robot.distanceTo(waypoint))
+        print("HELLO 1")
+        let instruction = Instruction(distance: robot.distanceTo(waypoint), angle: robot.angleTo(waypoint))
+        
+        instructions.append(instruction)
+        
+        return instruction
+        
+    }
+    
+    override func sendNextInstruction(instruction: Instruction) {
+    
+        guard let romi = romiPeripheral, let characteristic = instructionCharacteristic else {
+            print("Wasn't connected to Romi")
+            return
+        }
+
+        var instruction = instructions[instructions.count - 1]
+        
+        print(instruction.distance)
+        print(instruction.angle)
+                
+        var payload = Data(buffer: UnsafeBufferPointer(start: &instruction.distance, count: 1))
+        payload.append(Data(buffer: UnsafeBufferPointer(start: &instruction.angle, count: 1)))
+        
+        romi.writeValue(payload, for: characteristic, type: CBCharacteristicWriteType.withResponse)
+        
+        print("Transmitted instruction \(instructions.count - 1): (\(instruction)")
+        bleStatusView?.status = .transmitting
     }
     
     override func discoveredInstructionCharacteristic() {
@@ -85,7 +132,6 @@ extension ViewController: ARSessionDelegate {
         guard let imageAnchor = anchors.first as? ARImageAnchor,
               let _ = imageAnchor.referenceImage.name
         else { return }
-        print(imageAnchor.transform)
         arView.addRobot(anchor: imageAnchor)
     }
     

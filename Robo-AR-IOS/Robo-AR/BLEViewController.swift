@@ -24,35 +24,27 @@ class BLEViewController: UIViewController {
     
     static let ROMI_CHARACTERISTIC_UUIDS = [ROMI_INSTRUCTION_CHARACTERISTIC_UUID, ROMI_ACKNOWLEDGE_CHARACTERISTIC_UUID]
     
-    var lastExecutedInstruction = -1
+    var numWaypointsPassed = -1
     
     override func viewDidLoad() {
         centralManager = CBCentralManager(delegate: self, queue: nil)
     }
     
-    func sendNextInstruction() {
-        if lastExecutedInstruction + 1 >= instructions.count {
-            print("Executed all instructions")
-            return
-        }
-        
-        guard let romi = romiPeripheral, let characteristic = instructionCharacteristic else {
-            print("Wasn't connected to Romi")
-            return
-        }
-        
-        var instruction = instructions[lastExecutedInstruction + 1]
-        var payload = Data(buffer: UnsafeBufferPointer(start: &instruction.distance, count: 1))
-        payload.append(Data(buffer: UnsafeBufferPointer(start: &instruction.angle, count: 1)))
-        
-        romi.writeValue(payload, for: characteristic, type: CBCharacteristicWriteType.withResponse)
-        
-        lastExecutedInstruction += 1
-        print("Transmitted instruction \(lastExecutedInstruction): (\(instructions[lastExecutedInstruction])")
+    func sendNextInstruction(instruction: Instruction) {
+        preconditionFailure("This method must be overridden")
+    }
+    
+    func compileNextInstruction() -> Instruction? {
+        preconditionFailure("This method must be overridden")
     }
     
     func discoveredInstructionCharacteristic() {
-        sendNextInstruction()
+        let inst = compileNextInstruction()
+        if(inst == nil){
+            print("Finished exeuting instructions")
+            return
+        }
+        sendNextInstruction(instruction: inst!)
     }
 }
 
@@ -130,9 +122,14 @@ extension BLEViewController: CBPeripheralDelegate {
                 return pointer.pointee
             }) else { print("Couldn't get characteristic value"); return; }
             
-            if acknowledge == 0 && lastExecutedInstruction >= 0 {
-                instructions[lastExecutedInstruction].completed = true
-                sendNextInstruction()
+            if acknowledge == 0 && instructions.count > 0 {
+                instructions[instructions.count - 1].completed = true
+                let nextInstruction = compileNextInstruction()
+                if(nextInstruction == nil){
+                    print("Finished executing instructions")
+                    return
+                }
+                sendNextInstruction(instruction: nextInstruction!)
             } else {
                 print("Romi Received Instruction!")
             }
