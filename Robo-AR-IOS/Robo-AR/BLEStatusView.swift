@@ -42,7 +42,7 @@ class BLEStatusView: UIView {
             case .transmitting:
                 textLabel.text = "Transmitting Instruction"
                 if(instruction != nil) {
-                    textLabel.text = "Transmitting Instruction \(instruction!.waypointNumber), \(String(format: "%2f", instruction!.distance)), \(String(format: "%2f", instruction!.angle))"
+                    textLabel.text = "Transmitting Instruction \(instruction!.waypointNumber), \(String(format: "%.2f", instruction!.distance)), \(String(format: "%.2f", instruction!.angle))"
                 }
                 contentView.backgroundColor = statusYellow
                 

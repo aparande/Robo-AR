@@ -87,12 +87,7 @@ class ViewController: BLEViewController {
         let waypoint = arView.currentWayPoint!
         let robot = arView.robot!
         
-        print("ANGLE")
-        print(robot.angleTo(waypoint))
-        print("Distance")
-        print(robot.distanceTo(waypoint))
-        print("WAYPOINT NUMBER")
-        print(waypoint.number)
+        
         let instruction = Instruction(distance: robot.distanceTo(waypoint), angle: robot.angleTo(waypoint), waypointNumber: waypoint.number)
         
         instructions.append(instruction)
