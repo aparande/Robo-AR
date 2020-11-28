@@ -77,11 +77,22 @@ float cur_data[] = {0,0,0,0,0,0,0,0,0,0,
 int point_idx = 0;
 bool data_ready = false;
 
-void clear_data() {
-    for (int i = 0; i < n_points; i++) {
-        cur_data[i * 3] = 0;
-        cur_data[i * 3 + 1] = 0;
-        cur_data[i * 3 + 2] = 0;
+void clear_data(bool keep) {
+    if (!keep) {
+        for (int i = 0; i < n_points; i++) {
+            cur_data[i * 3] = 0;
+            cur_data[i * 3 + 1] = 0;
+            cur_data[i * 3 + 2] = 0;
+        }
+    } else {
+        cur_data[0] = cur_data[n_points * 3 - 3];
+        cur_data[1] = cur_data[n_points * 3 - 2];
+        //cur_data[2] = cur_data[n_points * 3 - 1];
+        for (int i = 1; i < n_points; i++) {
+            cur_data[i * 3] = 0;
+            cur_data[i * 3 + 1] = 0;
+            cur_data[i * 3 + 2] = 0;
+        }
     }
 }
 
@@ -151,9 +162,9 @@ void print_state(states current_state){
     }
 	case DRIVING: {
         if (point_idx > 0) { 
-        snprintf(buf, 16, "Time Left: %.2f", drive_command[2] - cur_data[point_idx*3 - 3 + 2]);
+        snprintf(buf, 16, "Time Left: %.2f", drive_command[2] - cur_data[point_idx*3 - 1]);
 		display_write(buf, DISPLAY_LINE_0);
-        snprintf(buf, 16, "L: %.2f R: %.2f", cur_data[point_idx*3 - 3], cur_data[point_idx*3 - 3 + 1]);
+        snprintf(buf, 16, "L: %.2f R: %.2f", cur_data[point_idx*3 - 3], cur_data[point_idx*3 - 2]);
 		display_write(buf, DISPLAY_LINE_1);
         }
         break;
@@ -305,7 +316,7 @@ int main(void) {
         if (is_button_pressed(&sensors)) {
             nrf_gpio_pin_set(23);
             nrf_gpio_pin_set(24);
-            clear_data();
+            clear_data(false);
             point_idx=0;
             state = OFF;
         } else if (cur_time > drive_command[2]) {
@@ -314,20 +325,17 @@ int main(void) {
             simple_ble_notify_char(&ack_char);
             copy_data();
             data_ready = true;
-            clear_data();
+            clear_data(false);
             point_idx=0;
             state = WAITING;
         } else {
           state = DRIVING;
           encoder_cur_left = sensors.leftWheelEncoder;
           encoder_cur_right = sensors.rightWheelEncoder;
-          //printf("hello?\n");
-          cur_data[point_idx*3] += measure_distance(encoder_cur_left, encoder_prev_left);
-          printf("Left encoder %i\n", encoder_cur_left);
-          printf("Left encoder prev%i\n", encoder_prev_left);
-          nrf_delay_ms(10);
-          printf("Distance traveled: %f\n", cur_data[point_idx*3]);
-          cur_data[point_idx*3 + 1] += measure_distance(encoder_cur_right, encoder_prev_right);
+          if (point_idx > 0) {
+              cur_data[point_idx*3] = cur_data[point_idx*3 - 3] + measure_distance(encoder_cur_left, encoder_prev_left);
+              cur_data[point_idx*3 + 1] = cur_data[point_idx*3 - 2] + measure_distance(encoder_cur_right, encoder_prev_right);
+          }
           cur_data[point_idx*3 + 2] = cur_time;
           encoder_prev_left = encoder_cur_left;
           encoder_prev_right = encoder_cur_right;
@@ -335,7 +343,7 @@ int main(void) {
           if (point_idx == n_points) {
               copy_data();
               data_ready = true;
-              clear_data();
+              clear_data(true);
               point_idx=0;
           }
           kobukiDriveDirect((int16_t) drive_command[0], (int16_t) drive_command[1]);
