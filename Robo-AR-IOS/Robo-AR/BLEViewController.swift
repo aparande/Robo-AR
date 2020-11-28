@@ -136,13 +136,12 @@ extension BLEViewController: CBPeripheralDelegate {
             }) else { print("Couldn't get characteristic value"); return; }
             
             if acknowledge == 0 {
-                let nextInstruction = compileNextInstruction()
-                if(nextInstruction == nil){
+                if let inst = compileNextInstruction() {
+                    sendInstruction(instruction: inst)
+                } else {
                     print("Finished executing instructions")
                     bleStatusView?.status = .done
-                    return
                 }
-                sendInstruction(instruction: nextInstruction!)
             } else {
                 print("Romi Received Instruction!")
             }
