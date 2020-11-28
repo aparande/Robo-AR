@@ -78,21 +78,24 @@ int point_idx = 0;
 bool data_ready = false;
 
 void clear_data(bool keep) {
-    if (!keep) {
-        for (int i = 0; i < n_points; i++) {
-            cur_data[i * 3] = 0;
-            cur_data[i * 3 + 1] = 0;
-            cur_data[i * 3 + 2] = 0;
-        }
+    if (keep) {
+       cur_data[0] = cur_data[n_points * 3 - 3];
+       cur_data[1] = cur_data[n_points * 3 - 2];
+      //  for (int i = 0; i < n_points; i++) {
+      //      cur_data[i * 3] = 0;
+      //      cur_data[i * 3 + 1] = 0;
+      //      cur_data[i * 3 + 2] = 0;
+      //  }
     } else {
-        cur_data[0] = cur_data[n_points * 3 - 3];
-        cur_data[1] = cur_data[n_points * 3 - 2];
+        cur_data[0] = 0;
+        cur_data[1] = 0;
+        cur_data[2] = 0;
         //cur_data[2] = cur_data[n_points * 3 - 1];
-        for (int i = 1; i < n_points; i++) {
-            cur_data[i * 3] = 0;
-            cur_data[i * 3 + 1] = 0;
-            cur_data[i * 3 + 2] = 0;
-        }
+//        for (int i = 1; i < n_points; i++) {
+//            cur_data[i * 3] = 0;
+//            cur_data[i * 3 + 1] = 0;
+//            cur_data[i * 3 + 2] = 0;
+//        }
     }
 }
 
@@ -107,7 +110,7 @@ bool connected = false;
 
 
 void readInput() {
-    printf("Bluetooth message recieved\n");
+    //printf("Bluetooth message recieved\n");
     if (state == WAITING) {
         //printf("Left Input: %f\n", drive_command[0]);
         //printf("Right Input: %f\n", drive_command[1]);
@@ -124,7 +127,7 @@ void ble_evt_write(ble_evt_t const* p_ble_evt) {
     //logic for each characteristic and related state changes
     //Try not to modify the state here...
     if (simple_ble_is_char_event(p_ble_evt, &data_ready_char)) {
-        printf("Data read event\n");
+        //printf("Data read event\n");
         data_ready = false;
     } else if (simple_ble_is_char_event(p_ble_evt, &drive_command_char)) {
         readInput();
@@ -174,7 +177,7 @@ void print_state(states current_state){
 
 static void dummy_handler(void * p_context)
 {
-    printf("Dummy fired!\n");
+    //printf("Dummy fired!\n");
 }
 int main(void) {
   ret_code_t error_code = NRF_SUCCESS;
