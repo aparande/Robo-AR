@@ -75,7 +75,7 @@ class ViewController: BLEViewController {
             print("DISTANCE")
             print(arView.robot!.distanceTo(arView.currentWayPoint!))
             
-            if(arView.robot!.distanceTo(arView.currentWayPoint!) < 0.05){
+            if(arView.robot!.distanceTo(arView.currentWayPoint!) < 0.10){
                 arView.currentWayPoint = arView.currentWayPoint!.next
             }
         }
@@ -91,8 +91,9 @@ class ViewController: BLEViewController {
         print(robot.angleTo(waypoint))
         print("Distance")
         print(robot.distanceTo(waypoint))
-        print("HELLO 1")
-        let instruction = Instruction(distance: robot.distanceTo(waypoint), angle: robot.angleTo(waypoint))
+        print("WAYPOINT NUMBER")
+        print(waypoint.number)
+        let instruction = Instruction(distance: robot.distanceTo(waypoint), angle: robot.angleTo(waypoint), waypointNumber: waypoint.number)
         
         instructions.append(instruction)
         
@@ -118,6 +119,7 @@ class ViewController: BLEViewController {
         romi.writeValue(payload, for: characteristic, type: CBCharacteristicWriteType.withResponse)
         
         print("Transmitted instruction \(instructions.count - 1): (\(instruction)")
+        bleStatusView?.instruction = instruction
         bleStatusView?.status = .transmitting
     }
     

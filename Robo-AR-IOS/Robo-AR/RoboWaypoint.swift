@@ -33,6 +33,9 @@ class RoboWaypoint: Entity, HasModel, HasAnchoring, HasCollision {
         diff.y = 0
         let forwardAngle = SIMD3<Float>(0.0, 0.0, 1.0)
         let angle = acos(dot(forwardAngle, diff) / length(diff)) * 180 / .pi
+        
+        print(forwardAngle.horizontalAngle(to: diff))
+        print(angle)
         return angle
     }
     

@@ -17,6 +17,7 @@ class BLEStatusView: UIView {
 
     @IBOutlet weak var loadingIndicator: UIActivityIndicatorView!
     @IBOutlet weak var textLabel: UILabel!
+    var instruction: Instruction?
     @IBOutlet var contentView: UIView!
     
     private let statusGreen = UIColor(red: 39.0 / 255, green: 174.0 / 255, blue: 96.0 / 255, alpha: 1.0)
@@ -40,6 +41,9 @@ class BLEStatusView: UIView {
                 loadingIndicator.stopAnimating()
             case .transmitting:
                 textLabel.text = "Transmitting Instruction"
+                if(instruction != nil) {
+                    textLabel.text = "Transmitting Instruction \(instruction!.waypointNumber), \(String(format: "%2f", instruction!.distance)), \(String(format: "%2f", instruction!.angle))"
+                }
                 contentView.backgroundColor = statusYellow
                 
                 loadingIndicator.isHidden = false

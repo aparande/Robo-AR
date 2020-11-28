@@ -12,4 +12,5 @@ struct Instruction {
     var distance: Float
     var angle: Float = 0
     var completed = false
+    var waypointNumber: Int
 }
