@@ -67,6 +67,8 @@ extension BLEViewController: CBCentralManagerDelegate {
             print("central.state is .poweredOn. Scanning for Romi")
             bleStatusView?.status = .connecting
             centralManager.scanForPeripherals(withServices: nil)
+          default:
+            print("Unrecognized state")
         }
     }
     
@@ -115,8 +117,6 @@ extension BLEViewController: CBPeripheralDelegate {
                 print("Found acknowledge characteristic")
                 acknowledgeCharacteristic = characteristic
                 romiPeripheral?.setNotifyValue(true, for: characteristic)
-                print(acknowledgeCharacteristic?.properties.contains(.notify))
-                romiPeripheral?.discoverDescriptors(for: characteristic)
             }
         }
     }

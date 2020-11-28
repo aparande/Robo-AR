@@ -21,10 +21,10 @@ extension WaypointView: ARCoachingOverlayViewDelegate {
         self.addSubview(coachingOverlay)
         
         NSLayoutConstraint.activate([
-            NSLayoutConstraint(item: self.coachingOverlay, attribute: .top, relatedBy: .equal, toItem: self, attribute: .top, multiplier: 1.0, constant: 0),
-            NSLayoutConstraint(item: self.coachingOverlay, attribute: .bottom, relatedBy: .equal, toItem: self, attribute: .bottom, multiplier: 1.0, constant: 0),
-            NSLayoutConstraint(item: self.coachingOverlay, attribute: .leading, relatedBy: .equal, toItem: self, attribute: .leading, multiplier: 1.0, constant: 0),
-            NSLayoutConstraint(item: self.coachingOverlay, attribute: .trailing, relatedBy: .equal, toItem: self, attribute: .trailing, multiplier: 1.0, constant: 0)
+            NSLayoutConstraint(item: self.coachingOverlay!, attribute: .top, relatedBy: .equal, toItem: self, attribute: .top, multiplier: 1.0, constant: 0),
+            NSLayoutConstraint(item: self.coachingOverlay!, attribute: .bottom, relatedBy: .equal, toItem: self, attribute: .bottom, multiplier: 1.0, constant: 0),
+            NSLayoutConstraint(item: self.coachingOverlay!, attribute: .leading, relatedBy: .equal, toItem: self, attribute: .leading, multiplier: 1.0, constant: 0),
+            NSLayoutConstraint(item: self.coachingOverlay!, attribute: .trailing, relatedBy: .equal, toItem: self, attribute: .trailing, multiplier: 1.0, constant: 0)
         ])
         
         coachingOverlay.translatesAutoresizingMaskIntoConstraints = false
