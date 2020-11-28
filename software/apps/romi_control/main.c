@@ -301,10 +301,13 @@ int main(void) {
           encoder_prev_right = encoder_cur_right;
           int8_t sign_left = (2 * (diff_left > 0)) - 1;
           //Wheel diff might not work if backwards :(
-          int16_t speed_left =  sign_left * fmax(110 * fabs(diff_left), 30) - 250 * wheel_diff;
+          int gain = 200;
+          int16_t speed_left =  sign_left * fmax(gain * fabs(diff_left), 80) - 250 * wheel_diff;
           //int16_t speed_left =  sign_left * fmax(-220 * wheel_diff, 40);
           int8_t sign_right = (2 * (diff_right > 0)) - 1;
-          int16_t speed_right = sign_right * fmax(110 * fabs(diff_right), 50) + 250 * wheel_diff;
+          int16_t speed_right = sign_right * fmax(gain * fabs(diff_right), 80) + 250 * wheel_diff;
+          //speed_left = 100;
+          //speed_right = 100;
           kobukiDriveDirect(speed_left, speed_right);
           //kobukiDriveDirect(speed_left , sign_right * 80);
         }
