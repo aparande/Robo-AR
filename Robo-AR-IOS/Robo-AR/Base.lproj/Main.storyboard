@@ -61,57 +61,11 @@
                         <outlet property="arView" destination="daP-Rn-669" id="hFD-f3-gQf"/>
                         <outlet property="bleStatusView" destination="hty-6q-yWI" id="sdU-ev-p1v"/>
                         <outlet property="generateButton" destination="1Ed-kz-DKF" id="lbe-Bj-k81"/>
-                        <segue destination="e3b-xW-MF8" kind="show" identifier="showInstructions" id="BLn-N0-d2A"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="137.68115942028987" y="133.92857142857142"/>
-        </scene>
-        <!--Instruction Table View Controller-->
-        <scene sceneID="fqf-dT-3Sk">
-            <objects>
-                <tableViewController id="e3b-xW-MF8" customClass="InstructionTableViewController" customModule="Robo_AR" customModuleProvider="target" sceneMemberID="viewController">
-                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" id="GA4-ch-h8f">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                        <prototypes>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" accessoryType="checkmark" indentationWidth="10" reuseIdentifier="instructionCell" textLabel="GB6-yk-jJB" detailTextLabel="aTW-88-8Hg" style="IBUITableViewCellStyleSubtitle" id="zcY-Ew-7En">
-                                <rect key="frame" x="0.0" y="28" width="414" height="55.5"/>
-                                <autoresizingMask key="autoresizingMask"/>
-                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="zcY-Ew-7En" id="7eR-pw-no5">
-                                    <rect key="frame" x="0.0" y="0.0" width="370" height="55.5"/>
-                                    <autoresizingMask key="autoresizingMask"/>
-                                    <subviews>
-                                        <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="Title" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="GB6-yk-jJB">
-                                            <rect key="frame" x="20" y="10" width="33" height="20.5"/>
-                                            <autoresizingMask key="autoresizingMask"/>
-                                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                            <nil key="textColor"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
-                                        <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="Detail" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="aTW-88-8Hg">
-                                            <rect key="frame" x="20" y="31.5" width="33" height="14.5"/>
-                                            <autoresizingMask key="autoresizingMask"/>
-                                            <fontDescription key="fontDescription" type="system" pointSize="12"/>
-                                            <nil key="textColor"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
-                                    </subviews>
-                                </tableViewCellContentView>
-                            </tableViewCell>
-                        </prototypes>
-                        <connections>
-                            <outlet property="dataSource" destination="e3b-xW-MF8" id="CMp-gM-3dD"/>
-                            <outlet property="delegate" destination="e3b-xW-MF8" id="9Dy-SQ-gYs"/>
-                        </connections>
-                    </tableView>
-                    <navigationItem key="navigationItem" id="z8G-MH-Gg9"/>
-                </tableViewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="iqF-fV-97P" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="1068" y="134"/>
         </scene>
     </scenes>
     <resources>

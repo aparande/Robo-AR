@@ -10,7 +10,6 @@ import UIKit
 import CoreBluetooth
 
 class BLEViewController: UIViewController {
-    var instructions: [Instruction] = []
     var centralManager: CBCentralManager!
     var romiPeripheral: CBPeripheral?
     
@@ -32,21 +31,26 @@ class BLEViewController: UIViewController {
         centralManager = CBCentralManager(delegate: self, queue: nil)
     }
     
-    func sendNextInstruction(instruction: Instruction) {
-        preconditionFailure("This method must be overridden")
+    func sendInstruction(instruction: Instruction) {
+        var instruction = instruction
+        
+        guard let romi = romiPeripheral, let characteristic = instructionCharacteristic else {
+            print("Wasn't connected to Romi")
+            return
+        }
+                        
+        var payload = Data(buffer: UnsafeBufferPointer(start: &instruction.distance, count: 1))
+        payload.append(Data(buffer: UnsafeBufferPointer(start: &instruction.angle, count: 1)))
+        
+        romi.writeValue(payload, for: characteristic, type: CBCharacteristicWriteType.withResponse)
+        
+        print("Transmitted instruction: (\(instruction)")
+        bleStatusView?.instruction = instruction
+        bleStatusView?.status = .transmitting
     }
     
     func compileNextInstruction() -> Instruction? {
-        preconditionFailure("This method must be overridden")
-
-    }
-    func discoveredInstructionCharacteristic() {
-        let inst = compileNextInstruction()
-        if(inst == nil){
-            print("Finished exeuting instructions")
-            return
-        }
-        sendNextInstruction(instruction: inst!)
+        preconditionFailure("Compile Next Instruction Not Implemented")
     }
 }
 
@@ -112,7 +116,6 @@ extension BLEViewController: CBPeripheralDelegate {
                 // Kick off the instruction sending process
                 print("Found instruction characteristic")
                 instructionCharacteristic = characteristic
-                discoveredInstructionCharacteristic()
             } else if characteristic.uuid == BLEViewController.ROMI_ACKNOWLEDGE_CHARACTERISTIC_UUID {
                 print("Found acknowledge characteristic")
                 acknowledgeCharacteristic = characteristic
@@ -132,14 +135,14 @@ extension BLEViewController: CBPeripheralDelegate {
                 return pointer.pointee
             }) else { print("Couldn't get characteristic value"); return; }
             
-            if acknowledge == 0 && instructions.count > 0 {
-                instructions[instructions.count - 1].completed = true
+            if acknowledge == 0 {
                 let nextInstruction = compileNextInstruction()
                 if(nextInstruction == nil){
                     print("Finished executing instructions")
+                    bleStatusView?.status = .done
                     return
                 }
-                sendNextInstruction(instruction: nextInstruction!)
+                sendInstruction(instruction: nextInstruction!)
             } else {
                 print("Romi Received Instruction!")
             }
