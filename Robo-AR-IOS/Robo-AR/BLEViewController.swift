@@ -17,6 +17,8 @@ class BLEViewController: UIViewController {
     var instructionCharacteristic: CBCharacteristic?
     var acknowledgeCharacteristic: CBCharacteristic?
     
+    @IBOutlet weak var bleStatusView: BLEStatusView?
+    
     static let ROMI_NAME = "Robo-AR"
     static let ROMI_SERVICE_UUID = CBUUID(string: "4607EDA0-F65E-4D59-A9FF-84420D87A4CA")
     static let ROMI_INSTRUCTION_CHARACTERISTIC_UUID = CBUUID(string: "4607EDA1-F65E-4D59-A9FF-84420D87A4CA")
@@ -36,8 +38,8 @@ class BLEViewController: UIViewController {
     
     func compileNextInstruction() -> Instruction? {
         preconditionFailure("This method must be overridden")
+
     }
-    
     func discoveredInstructionCharacteristic() {
         let inst = compileNextInstruction()
         if(inst == nil){
@@ -63,6 +65,7 @@ extension BLEViewController: CBCentralManagerDelegate {
             print("central.state is .poweredOff")
           case .poweredOn:
             print("central.state is .poweredOn. Scanning for Romi")
+            bleStatusView?.status = .connecting
             centralManager.scanForPeripherals(withServices: nil)
         }
     }
@@ -79,7 +82,14 @@ extension BLEViewController: CBCentralManagerDelegate {
     
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         print("Connected to Romi")
+        bleStatusView?.status = .connected
         romiPeripheral?.discoverServices([BLEViewController.ROMI_SERVICE_UUID])
+    }
+    
+    func showAlert(titled title: String, withMessage message:String) {
+        let alertView = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alertView.addAction(UIAlertAction.init(title: "Ok", style: .default, handler: nil))
+        self.present(alertView, animated: true, completion: nil)
     }
 }
 
@@ -136,14 +146,6 @@ extension BLEViewController: CBPeripheralDelegate {
         default:
             print("Unhandled characteristic UUID: \(characteristic.uuid)")
         }
-    }
-    
-    func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
-        print("Updated characteristic notification \(characteristic) \(error)")
-    }
-    
-    func peripheral(_ peripheral: CBPeripheral, didDiscoverDescriptorsFor characteristic: CBCharacteristic, error: Error?) {
-        print(characteristic.descriptors)
     }
 }
 

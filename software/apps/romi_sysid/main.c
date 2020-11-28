@@ -40,7 +40,7 @@ const float CLOCK_FREQ = 32768.0;
 // Intervals for advertising and connections
 static simple_ble_config_t ble_config = {
         // c0:98:e5:49:xx:xx
-        .platform_id       = 0x49,    // used as 4th octect in device BLE address
+        .platform_id       = 0x51,    // used as 4th octect in device BLE address
         .device_id         = 0xEEC5, 
         .adv_name          = "DNEG", // used in advertisements if there is room
         .adv_interval      = MSEC_TO_UNITS(1000, UNIT_0_625_MS),
@@ -56,8 +56,9 @@ static simple_ble_service_t drive_command_service = {{
 
 //Declare characteristics and variables for your service
 static simple_ble_char_t drive_command_char = {.uuid16 = 0xeda1};
-static simple_ble_char_t drive_distance_char = {.uuid16 = 0xeda2};
+static simple_ble_char_t drive_data_char = {.uuid16 = 0xeda2};
 static simple_ble_char_t ack_char = {.uuid16 = 0xeda3};
+static simple_ble_char_t data_ready_char = {.uuid16 = 0xeda4};
 simple_ble_app_t* simple_ble_app;
 
 //drivecommand for romi: left motor input, right motor input, time
@@ -65,52 +66,65 @@ simple_ble_app_t* simple_ble_app;
 //Right now I just case motor inputs to int16_t before they get used.
 float drive_command[3] = {0, 0, 0};
 //distance driven by both wheels: left distance, right distance, time
-float drive_distance[3] = {0, 0, 0};
+int n_points = 10;
+float drive_data[] = {0,0,0,0,0,0,0,0,0,0,                        
+                        0,0,0,0,0,0,0,0,0,0,
+                        0,0,0,0,0,0,0,0,0,0};
+float cur_data[] = {0,0,0,0,0,0,0,0,0,0,                        
+                        0,0,0,0,0,0,0,0,0,0,
+                        0,0,0,0,0,0,0,0,0,0};
+
+int point_idx = 0;
+bool data_ready = false;
+
+void clear_data() {
+    for (int i = 0; i < n_points; i++) {
+        cur_data[i * 3] = 0;
+        cur_data[i * 3 + 1] = 0;
+        cur_data[i * 3 + 2] = 0;
+    }
+}
+
+void copy_data() {
+    memcpy(drive_data, cur_data, point_idx * 3 * sizeof(float));
+}
+
 uint8_t acknowledged = 0;
 states state = OFF;
 uint32_t start_ticks = 0;
+bool connected = false;
+
 
 void readInput() {
     printf("Bluetooth message recieved\n");
     if (state == WAITING) {
-        printf("Left Input: %f\n", drive_command[0]);
-        printf("Right Input: %f\n", drive_command[1]);
-        printf("Time: %f\n", drive_command[2]);
+        //printf("Left Input: %f\n", drive_command[0]);
+        //printf("Right Input: %f\n", drive_command[1]);
+        //printf("Time: %f\n", drive_command[2]);
         acknowledged = 1;
+        //simple_ble_notify_char(&ack_char);
     }
 }
 
+void ble_evt_connected(ble_evt_t const* p_ble_evt) {
+    connected = true;
+}
 void ble_evt_write(ble_evt_t const* p_ble_evt) {
     //logic for each characteristic and related state changes
     //Try not to modify the state here...
-    readInput();
+    if (simple_ble_is_char_event(p_ble_evt, &data_ready_char)) {
+        printf("Data read event\n");
+        data_ready = false;
+    } else if (simple_ble_is_char_event(p_ble_evt, &drive_command_char)) {
+        readInput();
+    }
 }
 
 
+const float CONVERSION = 0.0006108;
 static float measure_distance(uint16_t current_encoder, uint16_t previous_encoder) {
-  const float CONVERSION = 0.0006108;
-  float distance = 0;
-  if (current_encoder < previous_encoder) {
-      if (previous_encoder - current_encoder > 30000) {
-        distance = (current_encoder - previous_encoder + 655365);
-      }
-      else {
-        distance = current_encoder - previous_encoder;
-      }
-  }
-  else {
-      if (current_encoder  - previous_encoder > 30000) {
-        distance = (current_encoder - previous_encoder - 655365);
-      }
-      else {
-        distance = current_encoder - previous_encoder;
-      }
-  }
-  float val = CONVERSION * distance;
-  if (fabs(val) > 300) {
-     val = 0;
-  }
-  return val;
+  float distance = CONVERSION * (current_encoder - previous_encoder);
+  return distance;
 }
 
 static float measure_time(void) {
@@ -136,11 +150,13 @@ void print_state(states current_state){
 		break;
     }
 	case DRIVING: {
-        snprintf(buf, 16, "Time Left: %.2f", drive_command[2] - measure_time());
+        if (point_idx > 0) { 
+        snprintf(buf, 16, "Time Left: %.2f", drive_command[2] - cur_data[point_idx*3 - 3 + 2]);
 		display_write(buf, DISPLAY_LINE_0);
-        snprintf(buf, 16, "L: %.2f R: %.2f", drive_distance[0], drive_distance[1]);
+        snprintf(buf, 16, "L: %.2f R: %.2f", cur_data[point_idx*3 - 3], cur_data[point_idx*3 - 3 + 1]);
 		display_write(buf, DISPLAY_LINE_1);
-		break;
+        }
+        break;
     }
    }
 }
@@ -169,12 +185,16 @@ int main(void) {
       &drive_command_service, &drive_command_char);
 
   simple_ble_add_characteristic(1, 0, 1, 0,
-      sizeof(drive_distance), (uint8_t*)&drive_distance,
-      &drive_command_service, &drive_distance_char);
+      sizeof(drive_data), (uint8_t*)&drive_data,
+      &drive_command_service, &drive_data_char);
 
   simple_ble_add_characteristic(1, 0, 1, 0,
       sizeof(acknowledged), (uint8_t*)&acknowledged,
       &drive_command_service, &ack_char);
+
+  simple_ble_add_characteristic(1, 1, 1, 0,
+      sizeof(data_ready), (uint8_t*)&data_ready,
+      &drive_command_service, &data_ready_char);
 
   // Start Advertising
   simple_ble_adv_only_name();
@@ -238,10 +258,10 @@ int main(void) {
   APP_ERROR_CHECK(error_code);
   printf("Timer initialized!\n");
 
-  float encoder_prev_left = 0;
-  float encoder_prev_right = 0;
-  float encoder_cur_left = 0;
-  float encoder_cur_right = 0;
+  uint16_t encoder_prev_left = 0;
+  uint16_t encoder_prev_right = 0;
+  uint16_t encoder_cur_left = 0;
+  uint16_t encoder_cur_right = 0;
 
   // loop forever, running state machine
   while (1) {
@@ -255,7 +275,7 @@ int main(void) {
     // Driving - Drive the amount specified by waypoint. Then go back to WAITING
     switch(state) {
       case OFF: {
-        if (is_button_pressed(&sensors)) {
+        if (is_button_pressed(&sensors) || connected) {
           nrf_gpio_pin_clear(23);
           state = WAITING;
         } else {
@@ -285,26 +305,39 @@ int main(void) {
         if (is_button_pressed(&sensors)) {
             nrf_gpio_pin_set(23);
             nrf_gpio_pin_set(24);
-            drive_distance[0] = 0;
-            drive_distance[1] = 0;
-            drive_distance[2] = 0;
+            clear_data();
+            point_idx=0;
             state = OFF;
         } else if (cur_time > drive_command[2]) {
             nrf_gpio_pin_set(24);
-            drive_distance[0] = 0;
-            drive_distance[1] = 0;
-            drive_distance[2] = 0;
-            acknowledged=0;
+            acknowledged = 0;
+            simple_ble_notify_char(&ack_char);
+            copy_data();
+            data_ready = true;
+            clear_data();
+            point_idx=0;
             state = WAITING;
         } else {
           state = DRIVING;
           encoder_cur_left = sensors.leftWheelEncoder;
           encoder_cur_right = sensors.rightWheelEncoder;
-          drive_distance[0] += measure_distance(encoder_cur_left, encoder_prev_left);
-          drive_distance[1] += measure_distance(encoder_cur_right, encoder_prev_right);
-          drive_distance[2] = cur_time;
+          //printf("hello?\n");
+          cur_data[point_idx*3] += measure_distance(encoder_cur_left, encoder_prev_left);
+          printf("Left encoder %i\n", encoder_cur_left);
+          printf("Left encoder prev%i\n", encoder_prev_left);
+          nrf_delay_ms(10);
+          printf("Distance traveled: %f\n", cur_data[point_idx*3]);
+          cur_data[point_idx*3 + 1] += measure_distance(encoder_cur_right, encoder_prev_right);
+          cur_data[point_idx*3 + 2] = cur_time;
           encoder_prev_left = encoder_cur_left;
           encoder_prev_right = encoder_cur_right;
+          point_idx++;
+          if (point_idx == n_points) {
+              copy_data();
+              data_ready = true;
+              clear_data();
+              point_idx=0;
+          }
           kobukiDriveDirect((int16_t) drive_command[0], (int16_t) drive_command[1]);
         }
         break;
