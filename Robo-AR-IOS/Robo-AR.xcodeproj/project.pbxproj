@@ -18,6 +18,8 @@
 		1F536D5725623E3B00A715A3 /* BLEViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F536D5625623E3B00A715A3 /* BLEViewController.swift */; };
 		1F6CE921255E567500C0B2EC /* Instruction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CE920255E567500C0B2EC /* Instruction.swift */; };
 		1F6CE924255E5AC300C0B2EC /* InstructionTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CE923255E5AC300C0B2EC /* InstructionTableViewController.swift */; };
+		1F811CC425717EA300A8AD16 /* BLEStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F811CC325717EA300A8AD16 /* BLEStatusView.swift */; };
+		1F811CC725717EB700A8AD16 /* BLEStatusView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F811CC625717EB700A8AD16 /* BLEStatusView.xib */; };
 		1FA8D2242559175E00DE50E6 /* WaypointList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA8D2232559175E00DE50E6 /* WaypointList.swift */; };
 		1FD5FD892550A8870028A42A /* Waypoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD5FD882550A8870028A42A /* Waypoint.swift */; };
 		6B9F2E702566E559001F4297 /* RoboWaypoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B9F2E6F2566E558001F4297 /* RoboWaypoint.swift */; };
@@ -37,6 +39,8 @@
 		1F536D5625623E3B00A715A3 /* BLEViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEViewController.swift; sourceTree = "<group>"; };
 		1F6CE920255E567500C0B2EC /* Instruction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Instruction.swift; sourceTree = "<group>"; };
 		1F6CE923255E5AC300C0B2EC /* InstructionTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstructionTableViewController.swift; sourceTree = "<group>"; };
+		1F811CC325717EA300A8AD16 /* BLEStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEStatusView.swift; sourceTree = "<group>"; };
+		1F811CC625717EB700A8AD16 /* BLEStatusView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = BLEStatusView.xib; sourceTree = "<group>"; };
 		1FA8D2232559175E00DE50E6 /* WaypointList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WaypointList.swift; path = WaypointView/WaypointList.swift; sourceTree = "<group>"; };
 		1FD5FD882550A8870028A42A /* Waypoint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Waypoint.swift; sourceTree = "<group>"; };
 		6B9F2E6F2566E558001F4297 /* RoboWaypoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoboWaypoint.swift; sourceTree = "<group>"; };
@@ -88,6 +92,8 @@
 				1F6CE923255E5AC300C0B2EC /* InstructionTableViewController.swift */,
 				1F536D5625623E3B00A715A3 /* BLEViewController.swift */,
 				6B9F2E6F2566E558001F4297 /* RoboWaypoint.swift */,
+				1F811CC325717EA300A8AD16 /* BLEStatusView.swift */,
+				1F811CC625717EB700A8AD16 /* BLEStatusView.xib */,
 			);
 			path = "Robo-AR";
 			sourceTree = "<group>";
@@ -169,6 +175,7 @@
 			files = (
 				1F23F2C325509349001DFED1 /* LaunchScreen.storyboard in Resources */,
 				1F23F2C025509349001DFED1 /* Assets.xcassets in Resources */,
+				1F811CC725717EB700A8AD16 /* BLEStatusView.xib in Resources */,
 				1F23F2BE25509345001DFED1 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -182,6 +189,7 @@
 			files = (
 				1F536D5725623E3B00A715A3 /* BLEViewController.swift in Sources */,
 				1F474BAF25565B7800C22F8C /* WaypointView.swift in Sources */,
+				1F811CC425717EA300A8AD16 /* BLEStatusView.swift in Sources */,
 				1FD5FD892550A8870028A42A /* Waypoint.swift in Sources */,
 				1F23F2B925509345001DFED1 /* ViewController.swift in Sources */,
 				1FA8D2242559175E00DE50E6 /* WaypointList.swift in Sources */,
@@ -341,7 +349,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = TF3378AB4B;
+				DEVELOPMENT_TEAM = CZ787F8MST;
 				INFOPLIST_FILE = "Robo-AR/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -359,7 +367,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = TF3378AB4B;
+				DEVELOPMENT_TEAM = CZ787F8MST;
 				INFOPLIST_FILE = "Robo-AR/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
