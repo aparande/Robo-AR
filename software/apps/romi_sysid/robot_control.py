@@ -5,6 +5,7 @@ import keyboard
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 from getpass import getpass
 from bluepy.btle import Peripheral, DefaultDelegate
 
@@ -48,6 +49,7 @@ class RobotController():
         self.data = self.sv.getCharacteristics(DATA_UUID)[0]
         self.ack = self.sv.getCharacteristics(ACK_UUID)[0]
         self.data_ready = self.sv.getCharacteristics(DATA_READY_UUID)[0]
+        self.data_list = []
         while True:
             ack = struct.unpack("B", self.ack.read())[0]
            # if self.robot.waitForNotifications(1):
@@ -55,6 +57,10 @@ class RobotController():
            #     continue
             print("Ack val: {}".format(ack))
             if ack==0:
+               if self.data_list:
+                   name = input("Trial name: ")
+                   self.write_data(name)
+                   self.data_list = []
                ls = float(input("Left Speed: "))
                rs = float(input("Right Speed: "))
                t = float(input("Time (float seconds): "))
@@ -66,15 +72,23 @@ class RobotController():
                 data_ready = struct.unpack("B", self.data_ready.read())[0]
                 print("Data ready?: {}".format(data_ready))
                 if data_ready:
-                    print("Waiting...")
                     data = struct.unpack("f" * 30, self.data.read())
-                    print(data)
+                    self.data_list.extend(data)
                     self.data_ready.write(struct.pack('B', *[False]))
                 else:
                     print("Waiting...")
     def send_command(self, ls, rs, t):
         self.ch.write(struct.pack('fff', *[ls, rs, t]))
 
+    def write_data(self, name):
+        left_dists = self.data_list[::3]
+        right_dists = self.data_list[1::3]
+        times = self.data_list[2::3]
+        header = ["left_distance", "right_distance", "time"]
+        all_data = [left_dists, right_dists, times]
+        df = pd.DataFrame(all_data).transpose()
+        df.columns = header
+        df.to_csv("data/{}.csv".format(name), index=False)
 #    def on_key_event(self, event):
 #        # print key name
 #        print(event.name)
