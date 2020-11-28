@@ -3,6 +3,8 @@ import struct
 import time
 import keyboard
 import argparse
+import numpy as np
+import matplotlib.pyplot as plt
 from getpass import getpass
 from bluepy.btle import Peripheral, DefaultDelegate
 
