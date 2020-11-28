@@ -172,7 +172,7 @@ void print_state(states current_state){
    }
 }
 
-static void single_shot_timer_handler(void * p_context)
+static void dummy_handler(void * p_context)
 {
     printf("Dummy fired!\n");
 }
@@ -260,12 +260,12 @@ int main(void) {
   APP_ERROR_CHECK(error_code);
 
   //Need to make a timer for a dumb reason
-  APP_TIMER_DEF(m_single_shot_timer_id);
-  error_code = app_timer_create(&m_single_shot_timer_id,
-                   APP_TIMER_MODE_SINGLE_SHOT,
-                   single_shot_timer_handler);
+  APP_TIMER_DEF(m_repeated_timer_id);
+  error_code = app_timer_create(&m_repeated_timer_id,
+                   APP_TIMER_MODE_REPEATED,
+                   dummy_handler);
   APP_ERROR_CHECK(error_code);
-  error_code = app_timer_start(m_single_shot_timer_id, APP_TIMER_TICKS(100000), NULL);
+  error_code = app_timer_start(m_repeated_timer_id, APP_TIMER_TICKS(100000), NULL);
   APP_ERROR_CHECK(error_code);
   printf("Timer initialized!\n");
 
