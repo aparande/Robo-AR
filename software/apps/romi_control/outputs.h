@@ -37,7 +37,8 @@
 #include "helpers.h"
 
 typedef struct outputs {
-	int notify_ack;
+	bool notify_ack;
+	int notify_val;
 	uint16_t left_speed;
 	uint16_t right_speed;
 	char display_line_0[16];

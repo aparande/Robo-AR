@@ -59,6 +59,8 @@ const float angle_threshold;
 const float distance_threshold;
 int k_dist;
 int k_diff;
+uint16_t min_angle_speed;
+uint16_t min_drive_speed;
 
 float waypoint[2];
 bool new_waypoint_written;

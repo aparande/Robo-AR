@@ -36,13 +36,15 @@ simple_ble_app_t* simple_ble_app;
 const float CONVERSION = 0.0006108;
 const float angle_threshold = .5;
 const float distance_threshold = .02;
-int k_dist = 190;
+int k_dist = 210;
 int k_diff = 250;
+uint16_t min_angle_speed = 50;
+uint16_t min_drive_speed = 80;
 
 
 float waypoint[2] = {0, 0};
 bool new_waypoint_written = false;
-int acknowledged = -1;
+int acknowledged = 0;
 bool connected = false;
 
 
@@ -65,6 +67,9 @@ void ble_evt_disconnected(ble_evt_t const* p_ble_evt) {
 void ble_evt_write(ble_evt_t const* p_ble_evt) {
     //logic for each characteristic and related state changes
     //Try not to modify the state here...
+    printf("Bluetooth message recieved\n");
+	printf("Distance: %f\n", waypoint[0]);
+	printf("Angle: %f\n", waypoint[1]);
     new_waypoint_written = true;
 }
 
@@ -103,6 +108,26 @@ void setup() {
 }
 
 float measure_distance(uint16_t current_encoder, uint16_t previous_encoder) {
-   float distance = CONVERSION * (current_encoder - previous_encoder);
-   return distance;
+  float distance = 0;
+  if (current_encoder < previous_encoder) {
+      if (previous_encoder - current_encoder > 30000) {
+        distance = (current_encoder - previous_encoder + 655365);
+      }
+      else {
+        distance = current_encoder - previous_encoder;
+      }
+  }
+  else {
+      if (current_encoder  - previous_encoder > 30000) {
+        distance = (current_encoder - previous_encoder - 655365);
+      }
+      else {
+        distance = current_encoder - previous_encoder;
+      }
+  }
+  float val = CONVERSION * distance;
+  if (fabs(val) > 300) {
+     val = 0;
+  }
+  return val;
 }

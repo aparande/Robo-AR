@@ -3,6 +3,7 @@
 
 system_state_t init_state() {
 	system_state_t ret_system = {0};
+	ret_system.acknowledged_val = 0;
 	ret_system.state = OFF;
 	return ret_system;
 
@@ -61,7 +62,6 @@ void transition_out(inputs_t input_state, system_state_t* curr_state, states old
 
 outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 	outputs_t output = {0};
-	output.notify_ack = -1;
 	states old_state = curr_state->state;
 	switch(curr_state->state) {
 		case OFF: {
@@ -79,8 +79,11 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 	          	curr_state->state = OFF;
 	        } else if (input_state.new_waypoint_written) {
 	        	//transition out to turning
-	        	output.notify_ack = 1;
+	        	curr_state->acknowledged_val = 1;
+	        	output.notify_ack = true;
+	        	printf("Waypoint Angle: %f\n", input_state.waypoint_angle);
 	        	curr_state->turn_angle = input_state.waypoint_angle;
+	        	curr_state->distance_to_travel = input_state.waypoint_distance;
 	            curr_state->state = TURNING;
 	        } else {
 				output.left_speed = 0;
@@ -90,6 +93,9 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 	        break;
 	    }
       	case TURNING: {
+      		printf("Integration Val: %f\n", input_state.gyro_integration_z_value);
+      		printf("Cur Angle Val: %f\n", curr_state->curr_orientation_angle);
+      		printf("Cur Turn Val: %f\n", curr_state->turn_angle);
       		curr_state->curr_orientation_angle = input_state.gyro_integration_z_value; 
 	        float diff = curr_state->turn_angle - curr_state->curr_orientation_angle;
 	        if (input_state.button_pressed || !input_state.has_recently_connected) {
@@ -97,14 +103,14 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 	        } else if (fabs(diff) < angle_threshold) {
 	        	//transition out of turning
 	        	//transition into driving
+	        	printf("Transitioning to driving!\n");
 	        	curr_state->position_x = 0;
 	        	curr_state->position_y = 0;
-	        	curr_state->distance_to_travel = input_state.waypoint_distance;
 	            curr_state->state = DRIVING_FORWARD;
 	        }
 	        else {
 	          	int8_t sign = (2 * (diff > 0)) - 1;
-	          	int16_t speed = sign * fmax(.8 * fabs(diff), 50);
+	          	int16_t speed = sign * fmax(.8 * fabs(diff), min_angle_speed);
 				output.left_speed = -speed;
 				output.right_speed = speed;
 	          	curr_state->state = TURNING;
@@ -114,6 +120,8 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
       	case DRIVING_FORWARD: {
 	        float diff_left = curr_state->distance_to_travel - curr_state->total_distance_traveled_left;
 	        float diff_right = curr_state->distance_to_travel - curr_state->total_distance_traveled_right;
+	        printf("Left Error%f\n", diff_left);
+	        printf("Right Error%f\n", diff_right);
 	        float wheel_diff = diff_right - diff_left;
 	        curr_state->position_x = fmin(curr_state->total_distance_traveled_left, curr_state->total_distance_traveled_right);
 	        int8_t sign_left = (2 * (diff_left > 0)) - 1;
@@ -121,11 +129,14 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 	        if (input_state.button_pressed || !input_state.has_recently_connected) {
 	          	curr_state->state = OFF;
 	        } else if ((fmax(fabs(diff_left), fabs(diff_right)) < distance_threshold)) {
-	            output.notify_ack = 0;
+	            output.notify_ack = true;
+	            curr_state->acknowledged_val = 0;
 	            //transition out of driving
 	            //transition into waiting
 	            curr_state->state = WAITING;
 	        } else {
+	          printf("Distance Left: %f\n", curr_state->total_distance_traveled_left);
+	          printf("Distance Right: %f\n", curr_state->total_distance_traveled_right);
 	          curr_state->total_distance_traveled_left += measure_distance(input_state.left_encoder, curr_state->previous_left_encoder);
 	          curr_state->total_distance_traveled_right += measure_distance(input_state.right_encoder, curr_state->previous_right_encoder);
 		      curr_state->position_x = fmin(curr_state->total_distance_traveled_left, curr_state->total_distance_traveled_right);
@@ -133,8 +144,8 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 	          curr_state->previous_left_encoder = input_state.left_encoder;
 	          curr_state->previous_right_encoder = input_state.right_encoder;
 	          //Wheel diff might not work if backwards :(
-	          output.left_speed = sign_left * fmax(fabs(k_dist * diff_left - k_diff * wheel_diff), 70);
-	          output.right_speed = sign_right * fmax(fabs(k_dist * diff_right + k_diff * wheel_diff), 70);
+	          output.left_speed = sign_left * fmax(fabs(k_dist * diff_left - k_diff * wheel_diff), min_drive_speed);
+	          output.right_speed = sign_right * fmax(fabs(k_dist * diff_right + k_diff * wheel_diff), min_drive_speed);
 	          curr_state->state = DRIVING_FORWARD;
 	        }
         	break;
@@ -143,6 +154,7 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
      		break;
      	}
 	}
+	output.notify_val  = curr_state->acknowledged_val;
 	if (curr_state->state != old_state) {
      		transition_out(input_state, curr_state, old_state);
      		transition_in(input_state, curr_state);

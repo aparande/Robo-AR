@@ -302,6 +302,8 @@ NRF_TWI_MNGR_DEF(twi_mngr_instance, 5, 0);
 
 
 int main(void) {
+  setup();
+
   // initialize display
   nrf_drv_spi_t spi_instance = NRF_DRV_SPI_INSTANCE(1);
   nrf_drv_spi_config_t spi_config = {
@@ -334,7 +336,6 @@ int main(void) {
   kobukiInit();
   printf("Kobuki initialized!\n");
 
-  setup();
   system_state_t system_state = init_state();
   while(true) {
     inputs_t inputs = get_inputs();

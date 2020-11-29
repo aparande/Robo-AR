@@ -59,8 +59,8 @@ typedef struct system_state {
 	states state;
 	uint16_t previous_left_encoder;
 	uint16_t previous_right_encoder;
-	uint16_t total_distance_traveled_left;
-	uint16_t total_distance_traveled_right;
+	float total_distance_traveled_left;
+	float total_distance_traveled_right;
 	bumps most_recent_bump;
 	float avoidance_distance;
 	float position_x;
@@ -70,6 +70,7 @@ typedef struct system_state {
 	float curr_orientation_angle;
 	float turn_angle;
 	float distance_to_travel;
+	int acknowledged_val;
 } system_state_t;
 
 
