@@ -12,6 +12,7 @@ import Foundation
 class WaypointList: Sequence {
     var head: Waypoint?
     var tail: Waypoint?
+    var count = 0
     
     var isEmpty: Bool {
         get {
@@ -27,6 +28,7 @@ class WaypointList: Sequence {
             tail?.next = point
             tail = point
         }
+        count += 1
     }
     
     func makeIterator() -> WaypointIterator {

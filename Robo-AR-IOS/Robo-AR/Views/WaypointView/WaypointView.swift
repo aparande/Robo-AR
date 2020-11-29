@@ -13,9 +13,8 @@ import RealityKit
 
 
 class WaypointView: ARView {
-    var waypointCount: Int = 0
     var coachingOverlay: ARCoachingOverlayView!
-    var selectedEntity: Entity?
+    var currentWayPoint: Waypoint?
     var robot: RoboWaypoint?
     
     var waypoints: WaypointList = WaypointList()
@@ -25,7 +24,6 @@ class WaypointView: ARView {
         self.addGestureRecognizer(tap)
     }
     
-
     @objc func handleTap(_ sender: UITapGestureRecognizer? = nil) {
         guard let touchInView = sender?.location(in: self) else {
             return
@@ -33,40 +31,28 @@ class WaypointView: ARView {
         
         // To find whether an entity exists at the point of contact
         let entities = self.entities(at: touchInView)
-        guard let selected = entities.first else {
+        guard let _ = entities.first else {
             // Nothing was selected, so add to the view
             addWaypoint(at: touchInView)
             return
-        }
-        
-        if let entity = selectedEntity {
-            if selected == entity {
-                selectedEntity = nil
-            } else {
-                let direction = entity.position(relativeTo: selected)
-                print("Distance is \(direction.lengthHorizontal) meters in the direction \(direction)")
-            }
-        } else {
-            selectedEntity = selected
         }
     }
 
     func addWaypoint(at point: CGPoint) {
         guard let raycastQuery = self.makeRaycastQuery(from: point, allowing: .existingPlaneInfinite, alignment: .horizontal) else {
-            print("failed first")
+            print("Making raycast query failed")
             return
         }
 
         guard let result = self.session.raycast(raycastQuery).first else {
-            print("failed")
+            print("Raycast failed")
             return
         }
 
         var transformation = Transform(matrix: result.worldTransform)
-        print("Waypoint Transform")
-        print(transformation.matrix)
         transformation.translation += [0, 0.1, 0]
-        let box = Waypoint(color: .systemBlue, number: waypointCount)
+        
+        let box = Waypoint(color: .systemBlue, number: waypoints.count)
         self.installGestures(for: box)
         box.generateCollisionShapes(recursive: true)
         box.transform = transformation
@@ -75,10 +61,11 @@ class WaypointView: ARView {
         let raycastAnchor = AnchorEntity(raycastResult: result)
         raycastAnchor.addChild(box)
         self.scene.addAnchor(raycastAnchor)
-        print(raycastAnchor.transform.matrix)
-        waypointCount += 1
-        
         waypoints.insert(box)
+        
+        if(currentWayPoint == nil){
+            currentWayPoint = box;
+        }
     }
     
     func addRobot(anchor: ARImageAnchor){
@@ -88,13 +75,13 @@ class WaypointView: ARView {
         let roboBox = RoboWaypoint(color: .systemRed)
         
         roboBox.transform = transformation
-        roboBox.orientation = simd_quatf(angle: .pi/4, axis: [0, 0, 1])
+        roboBox.setOrientation(simd_quatf(angle: .pi/4, axis: [0, 0, 1]), relativeTo: roboBox)
 
         let robotEntity = AnchorEntity(anchor: anchor)
         robotEntity.addChild(roboBox)
+        
         self.scene.addAnchor(robotEntity)
         self.robot = roboBox
-        print("Anchor Added")
     }
     
     func updateRobot(anchor: ARImageAnchor){
@@ -102,13 +89,12 @@ class WaypointView: ARView {
         var transformation = Transform(matrix: anchor.transform)
         transformation.translation += [0, 0.02, 0]
         
-        if(robot == nil){
+        if let robot = self.robot {
+            robot.transform = transformation
+            robot.setOrientation(simd_quatf(angle: .pi/4, axis: [0, 0, 1]), relativeTo: robot)
+        } else {
             self.addRobot(anchor: anchor)
-            return
         }
-        
-        robot!.transform = transformation
-        robot!.orientation = simd_quatf(angle: .pi/4, axis: [0, 0, 1])
     }
 }
 

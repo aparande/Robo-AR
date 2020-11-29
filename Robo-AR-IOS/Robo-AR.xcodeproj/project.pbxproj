@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		1F23F2B725509345001DFED1 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F23F2B625509345001DFED1 /* AppDelegate.swift */; };
 		1F23F2B925509345001DFED1 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F23F2B825509345001DFED1 /* ViewController.swift */; };
-		1F23F2BB25509345001DFED1 /* Experience.rcproject in Sources */ = {isa = PBXBuildFile; fileRef = 1F23F2BA25509345001DFED1 /* Experience.rcproject */; };
 		1F23F2BE25509345001DFED1 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1F23F2BC25509345001DFED1 /* Main.storyboard */; };
 		1F23F2C025509349001DFED1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1F23F2BF25509349001DFED1 /* Assets.xcassets */; };
 		1F23F2C325509349001DFED1 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1F23F2C125509349001DFED1 /* LaunchScreen.storyboard */; };
@@ -17,10 +16,10 @@
 		1F474BB325565BDB00C22F8C /* WaypointView+Coaching.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F474BB225565BDB00C22F8C /* WaypointView+Coaching.swift */; };
 		1F536D5725623E3B00A715A3 /* BLEViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F536D5625623E3B00A715A3 /* BLEViewController.swift */; };
 		1F6CE921255E567500C0B2EC /* Instruction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CE920255E567500C0B2EC /* Instruction.swift */; };
-		1F6CE924255E5AC300C0B2EC /* InstructionTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CE923255E5AC300C0B2EC /* InstructionTableViewController.swift */; };
 		1F811CC425717EA300A8AD16 /* BLEStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F811CC325717EA300A8AD16 /* BLEStatusView.swift */; };
 		1F811CC725717EB700A8AD16 /* BLEStatusView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F811CC625717EB700A8AD16 /* BLEStatusView.xib */; };
-		1FA8D2242559175E00DE50E6 /* WaypointList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA8D2232559175E00DE50E6 /* WaypointList.swift */; };
+		1FCD3D772572F39900A0F92F /* WaypointList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCD3D762572F39900A0F92F /* WaypointList.swift */; };
+		1FCD3D7A2572F3BB00A0F92F /* ARPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCD3D792572F3BB00A0F92F /* ARPoint.swift */; };
 		1FD5FD892550A8870028A42A /* Waypoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD5FD882550A8870028A42A /* Waypoint.swift */; };
 		6B9F2E702566E559001F4297 /* RoboWaypoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B9F2E6F2566E558001F4297 /* RoboWaypoint.swift */; };
 /* End PBXBuildFile section */
@@ -29,7 +28,6 @@
 		1F23F2B325509345001DFED1 /* Robo-AR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Robo-AR.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F23F2B625509345001DFED1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		1F23F2B825509345001DFED1 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
-		1F23F2BA25509345001DFED1 /* Experience.rcproject */ = {isa = PBXFileReference; lastKnownFileType = file.rcproject; path = Experience.rcproject; sourceTree = "<group>"; };
 		1F23F2BD25509345001DFED1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		1F23F2BF25509349001DFED1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1F23F2C225509349001DFED1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -38,10 +36,10 @@
 		1F474BB225565BDB00C22F8C /* WaypointView+Coaching.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WaypointView+Coaching.swift"; sourceTree = "<group>"; };
 		1F536D5625623E3B00A715A3 /* BLEViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEViewController.swift; sourceTree = "<group>"; };
 		1F6CE920255E567500C0B2EC /* Instruction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Instruction.swift; sourceTree = "<group>"; };
-		1F6CE923255E5AC300C0B2EC /* InstructionTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstructionTableViewController.swift; sourceTree = "<group>"; };
 		1F811CC325717EA300A8AD16 /* BLEStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEStatusView.swift; sourceTree = "<group>"; };
 		1F811CC625717EB700A8AD16 /* BLEStatusView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = BLEStatusView.xib; sourceTree = "<group>"; };
-		1FA8D2232559175E00DE50E6 /* WaypointList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WaypointList.swift; path = WaypointView/WaypointList.swift; sourceTree = "<group>"; };
+		1FCD3D762572F39900A0F92F /* WaypointList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WaypointList.swift; sourceTree = "<group>"; };
+		1FCD3D792572F3BB00A0F92F /* ARPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARPoint.swift; sourceTree = "<group>"; };
 		1FD5FD882550A8870028A42A /* Waypoint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Waypoint.swift; sourceTree = "<group>"; };
 		6B9F2E6F2566E558001F4297 /* RoboWaypoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoboWaypoint.swift; sourceTree = "<group>"; };
 		AB0710D5264ECCFFF2A2C563 /* Pods_Robo_AR.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Robo_AR.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -78,22 +76,15 @@
 		1F23F2B525509345001DFED1 /* Robo-AR */ = {
 			isa = PBXGroup;
 			children = (
-				1FD5FD882550A8870028A42A /* Waypoint.swift */,
+				1FCD3D722572F32800A0F92F /* Views */,
+				1FCD3D742572F33500A0F92F /* Model */,
 				1F23F2B625509345001DFED1 /* AppDelegate.swift */,
 				1F23F2B825509345001DFED1 /* ViewController.swift */,
-				1F474BB125565BC100C22F8C /* WaypointView */,
-				1F23F2BA25509345001DFED1 /* Experience.rcproject */,
 				1F23F2BC25509345001DFED1 /* Main.storyboard */,
 				1F23F2BF25509349001DFED1 /* Assets.xcassets */,
 				1F23F2C125509349001DFED1 /* LaunchScreen.storyboard */,
 				1F23F2C425509349001DFED1 /* Info.plist */,
-				1FA8D2232559175E00DE50E6 /* WaypointList.swift */,
-				1F6CE920255E567500C0B2EC /* Instruction.swift */,
-				1F6CE923255E5AC300C0B2EC /* InstructionTableViewController.swift */,
 				1F536D5625623E3B00A715A3 /* BLEViewController.swift */,
-				6B9F2E6F2566E558001F4297 /* RoboWaypoint.swift */,
-				1F811CC325717EA300A8AD16 /* BLEStatusView.swift */,
-				1F811CC625717EB700A8AD16 /* BLEStatusView.xib */,
 			);
 			path = "Robo-AR";
 			sourceTree = "<group>";
@@ -105,6 +96,36 @@
 				1F474BB225565BDB00C22F8C /* WaypointView+Coaching.swift */,
 			);
 			path = WaypointView;
+			sourceTree = "<group>";
+		};
+		1FCD3D6E2572EA8A00A0F92F /* BLEStatusView */ = {
+			isa = PBXGroup;
+			children = (
+				1F811CC325717EA300A8AD16 /* BLEStatusView.swift */,
+				1F811CC625717EB700A8AD16 /* BLEStatusView.xib */,
+			);
+			path = BLEStatusView;
+			sourceTree = "<group>";
+		};
+		1FCD3D722572F32800A0F92F /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				1F474BB125565BC100C22F8C /* WaypointView */,
+				1FCD3D6E2572EA8A00A0F92F /* BLEStatusView */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		1FCD3D742572F33500A0F92F /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				1F6CE920255E567500C0B2EC /* Instruction.swift */,
+				1FCD3D762572F39900A0F92F /* WaypointList.swift */,
+				1FD5FD882550A8870028A42A /* Waypoint.swift */,
+				6B9F2E6F2566E558001F4297 /* RoboWaypoint.swift */,
+				1FCD3D792572F3BB00A0F92F /* ARPoint.swift */,
+			);
+			path = Model;
 			sourceTree = "<group>";
 		};
 		9413074E16B315540D77DAF9 /* Frameworks */ = {
@@ -189,15 +210,14 @@
 			files = (
 				1F536D5725623E3B00A715A3 /* BLEViewController.swift in Sources */,
 				1F474BAF25565B7800C22F8C /* WaypointView.swift in Sources */,
+				1FCD3D772572F39900A0F92F /* WaypointList.swift in Sources */,
 				1F811CC425717EA300A8AD16 /* BLEStatusView.swift in Sources */,
 				1FD5FD892550A8870028A42A /* Waypoint.swift in Sources */,
 				1F23F2B925509345001DFED1 /* ViewController.swift in Sources */,
-				1FA8D2242559175E00DE50E6 /* WaypointList.swift in Sources */,
 				1F23F2B725509345001DFED1 /* AppDelegate.swift in Sources */,
+				1FCD3D7A2572F3BB00A0F92F /* ARPoint.swift in Sources */,
 				6B9F2E702566E559001F4297 /* RoboWaypoint.swift in Sources */,
-				1F23F2BB25509345001DFED1 /* Experience.rcproject in Sources */,
 				1F6CE921255E567500C0B2EC /* Instruction.swift in Sources */,
-				1F6CE924255E5AC300C0B2EC /* InstructionTableViewController.swift in Sources */,
 				1F474BB325565BDB00C22F8C /* WaypointView+Coaching.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -10,7 +10,6 @@ import UIKit
 import CoreBluetooth
 
 class BLEViewController: UIViewController {
-    var instructions: [Instruction] = []
     var centralManager: CBCentralManager!
     var romiPeripheral: CBPeripheral?
     
@@ -26,38 +25,32 @@ class BLEViewController: UIViewController {
     
     static let ROMI_CHARACTERISTIC_UUIDS = [ROMI_INSTRUCTION_CHARACTERISTIC_UUID, ROMI_ACKNOWLEDGE_CHARACTERISTIC_UUID]
     
-    var lastExecutedInstruction = -1
+    var numWaypointsPassed = -1
     
     override func viewDidLoad() {
         centralManager = CBCentralManager(delegate: self, queue: nil)
     }
     
-    func sendNextInstruction() {
+    func sendInstruction(instruction: Instruction) {
+        var instruction = instruction
+        
         guard let romi = romiPeripheral, let characteristic = instructionCharacteristic else {
             print("Wasn't connected to Romi")
-            showAlert(titled: "Not Connected to Romi", withMessage: "Please wait for Romi to connect")
             return
         }
-        
-        if lastExecutedInstruction + 1 >= instructions.count {
-            print("Executed all instructions")
-            bleStatusView?.status = .done
-            return
-        }
-        
-        var instruction = instructions[lastExecutedInstruction + 1]
+                        
         var payload = Data(buffer: UnsafeBufferPointer(start: &instruction.distance, count: 1))
         payload.append(Data(buffer: UnsafeBufferPointer(start: &instruction.angle, count: 1)))
         
         romi.writeValue(payload, for: characteristic, type: CBCharacteristicWriteType.withResponse)
         
-        lastExecutedInstruction += 1
-        print("Transmitted instruction \(lastExecutedInstruction): (\(instructions[lastExecutedInstruction])")
+        print("Transmitted instruction: (\(instruction)")
+        bleStatusView?.instruction = instruction
         bleStatusView?.status = .transmitting
     }
     
-    func discoveredInstructionCharacteristic() {
-        sendNextInstruction()
+    func compileNextInstruction() -> Instruction? {
+        preconditionFailure("Compile Next Instruction Not Implemented")
     }
 }
 
@@ -78,6 +71,8 @@ extension BLEViewController: CBCentralManagerDelegate {
             print("central.state is .poweredOn. Scanning for Romi")
             bleStatusView?.status = .connecting
             centralManager.scanForPeripherals(withServices: nil)
+          default:
+            print("Unrecognized state")
         }
     }
     
@@ -121,13 +116,10 @@ extension BLEViewController: CBPeripheralDelegate {
                 // Kick off the instruction sending process
                 print("Found instruction characteristic")
                 instructionCharacteristic = characteristic
-                discoveredInstructionCharacteristic()
             } else if characteristic.uuid == BLEViewController.ROMI_ACKNOWLEDGE_CHARACTERISTIC_UUID {
                 print("Found acknowledge characteristic")
                 acknowledgeCharacteristic = characteristic
                 romiPeripheral?.setNotifyValue(true, for: characteristic)
-                print(acknowledgeCharacteristic?.properties.contains(.notify))
-                romiPeripheral?.discoverDescriptors(for: characteristic)
             }
         }
     }
@@ -143,9 +135,13 @@ extension BLEViewController: CBPeripheralDelegate {
                 return pointer.pointee
             }) else { print("Couldn't get characteristic value"); return; }
             
-            if acknowledge == 0 && lastExecutedInstruction >= 0 {
-                instructions[lastExecutedInstruction].completed = true
-                sendNextInstruction()
+            if acknowledge == 0 {
+                if let inst = compileNextInstruction() {
+                    sendInstruction(instruction: inst)
+                } else {
+                    print("Finished executing instructions")
+                    bleStatusView?.status = .done
+                }
             } else {
                 print("Romi Received Instruction!")
             }

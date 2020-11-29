@@ -14,42 +14,61 @@ enum BLEStatus {
 }
 
 class BLEStatusView: UIView {
-
     @IBOutlet weak var loadingIndicator: UIActivityIndicatorView!
-    @IBOutlet weak var textLabel: UILabel!
+    @IBOutlet weak var statusLabel: UILabel!
     @IBOutlet var contentView: UIView!
+    
+    @IBOutlet weak var waypointLabel: UILabel!
+    @IBOutlet weak var distLabel: UILabel!
+    @IBOutlet weak var angleLabel: UILabel!
     
     private let statusGreen = UIColor(red: 39.0 / 255, green: 174.0 / 255, blue: 96.0 / 255, alpha: 1.0)
     private let statusRed = UIColor(red: 192.0 / 255, green: 57.0 / 255, blue: 43.0 / 255, alpha: 1.0)
     private let statusYellow = UIColor(red: 241.0 / 255, green: 196.0 / 255, blue: 15.0 / 255, alpha: 1.0)
     
+    var instruction: Instruction? {
+        didSet {
+            if let inst = instruction {
+                waypointLabel.text = "#: \(inst.waypointNumber)"
+                distLabel.text = "Dist: \(String(format: "%.2f", inst.distance))"
+                angleLabel.text = "Angle: \(String(format: "%.2f", inst.angle))"
+            } else {
+                waypointLabel.text = ""
+                distLabel.text = ""
+                angleLabel.text = ""
+            }
+        }
+    }
+    
     var status: BLEStatus = .connecting {
         didSet {
             switch status {
             case .connecting:
-                textLabel.text = "Connecting to Romi"
+                statusLabel.text = "Connecting to Romi"
                 contentView.backgroundColor = statusRed
                 
                 loadingIndicator.isHidden = false
                 loadingIndicator.startAnimating()
             case .connected:
-                textLabel.text = "Connected to Romi"
+                statusLabel.text = "Connected to Romi"
                 contentView.backgroundColor = statusGreen
                 
                 loadingIndicator.isHidden = true
                 loadingIndicator.stopAnimating()
             case .transmitting:
-                textLabel.text = "Transmitting Instruction"
+                statusLabel.text = "Transmitting Instruction"
                 contentView.backgroundColor = statusYellow
                 
                 loadingIndicator.isHidden = false
                 loadingIndicator.startAnimating()
             case .done:
-                textLabel.text = "Transmitted all instructions"
+                statusLabel.text = "Transmitted all instructions"
                 contentView.backgroundColor = statusGreen
                 
                 loadingIndicator.isHidden = true
                 loadingIndicator.stopAnimating()
+                
+                instruction = nil
             }
         }
     }
@@ -69,5 +88,7 @@ class BLEStatusView: UIView {
         addSubview(contentView)
         contentView.frame = self.bounds
         contentView.autoresizingMask = [.flexibleHeight, .flexibleWidth]
+        
+        instruction = nil
     }
 }

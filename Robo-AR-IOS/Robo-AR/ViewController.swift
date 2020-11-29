@@ -9,18 +9,12 @@
 import UIKit
 import RealityKit
 import ARKit
-
-enum Mode {
-    case debug, release
-}
-
+import CoreBluetooth
 
 
 class ViewController: BLEViewController {
     @IBOutlet var arView: WaypointView!
     @IBOutlet weak var generateButton: UIButton!
-    
-    let MODE = Mode.release
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -41,41 +35,30 @@ class ViewController: BLEViewController {
         arView.session.run(config, options: [.resetTracking, .removeExistingAnchors])
         arView.debugOptions.insert(.showSceneUnderstanding)
         arView.debugOptions.insert(.showWorldOrigin)
-        //arView.debugOptions.insert(.showAnchorGeometry)
         
         generateButton.layer.cornerRadius = 20
     }
     
     @IBAction func startTransmission(_ sender: Any) {
-        if MODE == .debug {
-            performSegue(withIdentifier: "showInstructions", sender: nil)
-        } else {
-            if instructions.isEmpty {
-                instructions = compileInstructions()
-            }
-            sendNextInstruction()
+        if let inst = compileNextInstruction() {
+            sendInstruction(instruction: inst)
         }
     }
     
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        guard let destination = segue.destination as? InstructionTableViewController else { return }
-        destination.instructions = compileInstructions()
-    }
-    
-    func compileInstructions() -> [Instruction] {
-        var inst:[Instruction] = []
+    override func compileNextInstruction() -> Instruction? {
+        guard let robot = arView.robot else { return nil }
         
-        var prevAngle: Float = 0.0
-        for waypoint in arView.waypoints {
-            guard let next = waypoint.next else { continue }
-            inst.append(Instruction(distance: waypoint.distanceTo(next), angle: waypoint.angleTo(next) - prevAngle))
-            prevAngle = waypoint.angleTo(next)
+        if let currentWaypoint = arView.currentWayPoint {
+            if(robot.distanceTo(currentWaypoint) < 0.10){
+                arView.currentWayPoint = currentWaypoint.next
+            }
+        } else {
+            arView.currentWayPoint = arView.waypoints.head
         }
-        return inst
-    }
-    
-    override func discoveredInstructionCharacteristic() {
-        // Do Nothing
+        
+        guard let waypoint = arView.currentWayPoint else { return nil }
+        
+        return Instruction(distance: robot.distanceTo(waypoint), angle: robot.angleTo(waypoint), waypointNumber: waypoint.number)
     }
 }
 
@@ -85,7 +68,6 @@ extension ViewController: ARSessionDelegate {
         guard let imageAnchor = anchors.first as? ARImageAnchor,
               let _ = imageAnchor.referenceImage.name
         else { return }
-        print(imageAnchor.transform)
         arView.addRobot(anchor: imageAnchor)
     }
     
