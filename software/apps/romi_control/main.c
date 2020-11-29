@@ -70,11 +70,14 @@ void readInput() {
         printf("Distance: %f\n", waypoint[0]);
         printf("Angle: %f\n", waypoint[1]);
         acknowledged = 1;
-    }
 }
 
-ble_evt_connected(ble_evt_t const* p_ble_evt) {
+void ble_evt_connected(ble_evt_t const* p_ble_evt) {
     connected = true;
+}
+
+void ble_evt_disconnected(ble_evt_t const* p_ble_evt) {
+    connected = false;
 }
 
 
@@ -116,30 +119,10 @@ void print_state(states current_state){
    }
 }
 
+const float CONVERSION = 0.0006108;
 static float measure_distance(uint16_t current_encoder, uint16_t previous_encoder) {
-  const float CONVERSION = 0.0006108;
-  float distance = 0;
-  if (current_encoder < previous_encoder) {
-      if (previous_encoder - current_encoder > 30000) {
-        distance = (current_encoder - previous_encoder + 655365);
-      }
-      else {
-        distance = current_encoder - previous_encoder;
-      }
-  }
-  else {
-      if (current_encoder  - previous_encoder > 30000) {
-        distance = (current_encoder - previous_encoder - 655365);
-      }
-      else {
-        distance = current_encoder - previous_encoder;
-      }
-  }
-  float val = CONVERSION * distance;
-  if (fabs(val) > 300) {
-     val = 0;
-  }
-  return val;
+  float distance = CONVERSION * (current_encoder - previous_encoder);
+  return distance;
 }
 
 int main(void) {
@@ -242,7 +225,7 @@ int main(void) {
         break;
       }
       case WAITING: {
-        if (is_button_pressed(&sensors)) {
+        if (is_button_pressed(&sensors) || !connected) {
           state = OFF;
         } else if (acknowledged==1) {
             lsm9ds1_stop_gyro_integration();
@@ -257,7 +240,7 @@ int main(void) {
       case TURNING: {
         float current_angle = lsm9ds1_read_gyro_integration().z_axis;
         float diff = waypoint[1] - current_angle;
-        if (is_button_pressed(&sensors)) {
+        if (is_button_pressed(&sensors) || !connected) {
           lsm9ds1_stop_gyro_integration();
           state = OFF;
         } else if (fabs(diff) < angle_threshold) {
@@ -278,7 +261,7 @@ int main(void) {
         float diff_left = waypoint[0] - total_distance_left;
         float diff_right = waypoint[0] - total_distance_right;
         float wheel_diff = total_distance_left - total_distance_right;
-        if (is_button_pressed(&sensors)) {
+        if (is_button_pressed(&sensors) || !connected) {
             total_distance_left = 0;
             total_distance_right = 0;
             //total_distance = 0;
@@ -300,16 +283,13 @@ int main(void) {
           encoder_prev_left = encoder_cur_left;
           encoder_prev_right = encoder_cur_right;
           int8_t sign_left = (2 * (diff_left > 0)) - 1;
-          //Wheel diff might not work if backwards :(
-          int gain = 200;
-          int16_t speed_left =  sign_left * fmax(gain * fabs(diff_left), 80) - 250 * wheel_diff;
-          //int16_t speed_left =  sign_left * fmax(-220 * wheel_diff, 40);
           int8_t sign_right = (2 * (diff_right > 0)) - 1;
-          int16_t speed_right = sign_right * fmax(gain * fabs(diff_right), 80) + 250 * wheel_diff;
-          //speed_left = 100;
-          //speed_right = 100;
+          //Wheel diff might not work if backwards :(
+          int k_dist = 190;
+          int k_diff = 250;
+          int16_t speed_left =  sign_left * fmax(fabs(k_dist * diff_left - k_diff * wheel_diff), 70);
+          int16_t speed_right =  sign_right * fmax(fabs(k_dist * diff_right + k_diff * wheel_diff), 70);
           kobukiDriveDirect(speed_left, speed_right);
-          //kobukiDriveDirect(speed_left , sign_right * 80);
         }
         break;
       }
