@@ -86,6 +86,13 @@ class WaypointView: ARView {
     
     func updateRobot(anchor: ARImageAnchor){
         
+        if !anchor.isTracked, let anchor = self.robot?.parent as? AnchorEntity {
+            self.scene.removeAnchor(anchor)
+            self.robot = nil
+            print("Lost track of robot")
+            return
+        }
+        
         var transformation = Transform(matrix: anchor.transform)
         transformation.translation += [0, 0.02, 0]
         

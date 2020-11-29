@@ -46,7 +46,8 @@ class ViewController: BLEViewController {
     }
     
     override func compileNextInstruction() -> Instruction? {
-        guard let robot = arView.robot else { return nil }
+        
+        guard let robot = arView.robot ?? arView.currentWayPoint else { return nil }
         
         if let currentWaypoint = arView.currentWayPoint {
             if(robot.distanceTo(currentWaypoint) < 0.10){
@@ -75,6 +76,7 @@ extension ViewController: ARSessionDelegate {
         guard let imageAnchor = anchors.first as? ARImageAnchor,
               let _ = imageAnchor.referenceImage.name
         else { return }
+        
         arView.updateRobot(anchor: imageAnchor)
     }
 }
