@@ -1,12 +1,3 @@
-
-
-/*
- * states.h
- *
- *  Created on: Sep 22, 2018
- *      Author: shromonaghosh
- */
-
 #ifndef HELPERS_H_
 #define HELPERS_H_
 

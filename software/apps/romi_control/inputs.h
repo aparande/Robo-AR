@@ -1,10 +1,3 @@
-/*
- * states.h
- *
- *  Created on: Sep 22, 2018
- *      Author: shromonaghosh
- */
-
 #ifndef INPUTS_H_
 #define INPUTS_H_
 

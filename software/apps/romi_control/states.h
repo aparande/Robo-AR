@@ -1,10 +1,3 @@
-/*
- * states.h
- *
- *  Created on: Sep 22, 2018
- *      Author: shromonaghosh
- */
-
 #ifndef STATES_H_
 #define STATES_H_
 

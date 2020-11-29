@@ -56,14 +56,6 @@ void ble_evt_disconnected(ble_evt_t const* p_ble_evt) {
     connected = false;
 }
 
-// void read_input() {
-//     printf("Bluetooth message recieved\n");
-//     if (state == WAITING) {
-//         printf("Distance: %f\n", waypoint[0]);
-//         printf("Angle: %f\n", waypoint[1]);
-//     }
-// }
-
 void ble_evt_write(ble_evt_t const* p_ble_evt) {
     //logic for each characteristic and related state changes
     //Try not to modify the state here...

@@ -1,10 +1,3 @@
-/*
- * states.h
- *
- *  Created on: Sep 22, 2018
- *      Author: shromonaghosh
- */
-
 #ifndef OUTPUTS_H_
 #define OUTPUTS_H_
 
