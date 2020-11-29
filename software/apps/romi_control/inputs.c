@@ -13,7 +13,13 @@ inputs_t get_inputs() {
 	return_inputs.bump_right = sensors.bumps_wheelDrops.bumpRight || sensors.bumps_wheelDrops.bumpCenter;
 	return_inputs.bump_left = sensors.bumps_wheelDrops.bumpLeft;
 
-	return_inputs.is_integrating = nrfx_timer_is_enabled(&gyro_timer);
+
+	if (lsm9ds1_start_gyro_integration() == NRF_ERROR_INVALID_STATE) {
+		return_inputs.is_integrating = true;
+	} else {
+		stop_gyro_integration();
+		return_inputs.is_integrating = false;
+	}
 	if(return_inputs.is_integrating) {
 		printf("integrating!\n");
 		return_inputs.gyro_integration_z_value = lsm9ds1_read_gyro_integration().z_axis;
