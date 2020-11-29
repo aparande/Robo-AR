@@ -10,8 +10,6 @@
 #ifndef HELPERS_H_
 #define HELPERS_H_
 
-#endif /* INPUTS_H_ */_H_
-
 #include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -36,6 +34,10 @@
 #include "kobukiSensorTypes.h"
 #include "kobukiUtilities.h"
 #include "lsm9ds1.h"
+#include "simple_ble.h"
+
+#include "states.h"
+
 
 
 // Global Variables 
@@ -69,11 +71,13 @@ simple_ble_app_t* simple_ble_app;
 const float CONVERSION = 0.0006108;
 const float angle_threshold = .5;
 const float distance_threshold = .02;
-
+int k_dist = 190;
+int k_diff = 250;
 
 
 float waypoint[2] = {0, 0};
-int acknowledged = 0;
+bool new_waypoint_written = false;
+int acknowledged = -1;
 bool connected = false;
 
 void ble_evt_connected(ble_evt_t const* p_ble_evt) {
@@ -84,19 +88,18 @@ void ble_evt_disconnected(ble_evt_t const* p_ble_evt) {
     connected = false;
 }
 
-void read_input() {
-    printf("Bluetooth message recieved\n");
-    if (state == WAITING) {
-        printf("Distance: %f\n", waypoint[0]);
-        printf("Angle: %f\n", waypoint[1]);
-    }
-}
+// void read_input() {
+//     printf("Bluetooth message recieved\n");
+//     if (state == WAITING) {
+//         printf("Distance: %f\n", waypoint[0]);
+//         printf("Angle: %f\n", waypoint[1]);
+//     }
+// }
 
 void ble_evt_write(ble_evt_t const* p_ble_evt) {
     //logic for each characteristic and related state changes
     //Try not to modify the state here...
-    acknowledged = 1;
-	simple_ble_notify_char(&ack_char);
+    new_waypoint_written = true;
 }
 
 void setup();

@@ -1,10 +1,8 @@
 #include "helpers.h"
 
+NRF_TWI_MNGR_DEF(twi_mngr_instance, 5, 0);
+
 void setup() {
-	NRF_TWI_MNGR_DEF(twi_mngr_instance, 5, 0);
-
-	ret_code_t error_code = NRF_SUCCESS;
-
   // initialize RTT library
   error_code = NRF_LOG_INIT(NULL);
   APP_ERROR_CHECK(error_code);

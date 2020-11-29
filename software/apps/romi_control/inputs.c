@@ -5,8 +5,8 @@ inputs_t get_inputs() {
 	inputs_t return_inputs = {0};
 
 	
-	return_inputs.waypoint_distance = waypoints[0];
-	return_inputs.waypoint_angle = waypoints[1];
+	return_inputs.waypoint_distance = waypoint[0];
+	return_inputs.waypoint_angle = waypoint[1];
 	int status = kobukiSensorPoll(&sensors);
 	printf("%d\n", status);
 
@@ -23,7 +23,8 @@ inputs_t get_inputs() {
 		return_inputs.gyro_integration_z_value = lsm9ds1_read_gyro_integration().z_axis;
 	}
 	return_inputs.has_recently_connected = connected;
-
+	return_inputs.new_waypoint_written = new_waypoint_written;
+	new_waypoint_written = false;
 
 }
 

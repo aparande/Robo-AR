@@ -36,13 +36,13 @@
 
 #include "helpers.h"
 
-struct outputs = {
+typedef struct outputs {
 	int notify_ack;
 	uint16_t left_speed;
 	uint16_t right_speed;
-	char[16] display_line_1;
-	char[16] display_line_2;
-} typedef outputs_t;
+	char display_line_0[16];
+	char display_line_1[16];
+} outputs_t;
 
 
 void do_outputs(outputs_t output);

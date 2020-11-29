@@ -56,7 +56,7 @@ typedef enum {
 	RIGHT_BUMP=2
 } bumps;
 
-struct system_state = {
+typedef struct system_state {
 	states state;
 	uint16_t previous_left_encoder;
 	uint16_t previous_right_encoder;
@@ -70,7 +70,8 @@ struct system_state = {
 	float curr_waypoint_angle;
 	float curr_orientation_angle;
 	float turn_angle;
-} typedef system_state_t;
+	float distance_to_travel;
+} system_state_t;
 
 
 void transition_in(system_state_t* curr_state);
@@ -78,7 +79,7 @@ void transition_out(system_state_t* curr_state, states old_state);
 
 void print_state(system_state_t* curr_state);
 
-outputs_t transition(inputs_t input_state, system_state_t* curr_state);
+struct outputs transition(struct inputs input_state, system_state_t* curr_state);
 
 system_state_t init_state();
 
