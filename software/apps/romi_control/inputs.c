@@ -25,7 +25,7 @@ inputs_t get_inputs() {
 	return_inputs.has_recently_connected = connected;
 	return_inputs.new_waypoint_written = new_waypoint_written;
 	new_waypoint_written = false;
-
+	return return_inputs;
 }
 
 void stop_gyro_integration() {

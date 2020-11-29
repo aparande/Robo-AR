@@ -11,11 +11,11 @@ system_state_t init_state() {
 void transition_in(inputs_t input_state, system_state_t* curr_state) {
 	switch(curr_state->state) {
 		case OFF: {
-			*curr_state = init_state();
+			(*curr_state) = init_state();
 			break;
 		}
 		case WAITING: {
-			*curr_state = {0};
+			*curr_state = (system_state_t) {0};
 			curr_state->state = WAITING;
 			break;
 		}
@@ -45,6 +45,7 @@ void transition_out(inputs_t input_state, system_state_t* curr_state, states old
 		}
 		case TURNING: {
 			stop_gyro_integration();
+			curr_state->turn_angle = 0;
 			break;
 		}
 		case DRIVING_FORWARD: {
@@ -79,6 +80,7 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 	        } else if (input_state.new_waypoint_written) {
 	        	//transition out to turning
 	        	output.notify_ack = 1;
+	        	curr_state->turn_angle = input_state.waypoint_angle;
 	            curr_state->state = TURNING;
 	        } else {
 				output.left_speed = 0;
@@ -89,7 +91,7 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 	    }
       	case TURNING: {
       		curr_state->curr_orientation_angle = input_state.gyro_integration_z_value; 
-	        float diff = input_state->curr_waypoint_angle - curr_state->curr_orientation_angle;
+	        float diff = curr_state->turn_angle - curr_state->curr_orientation_angle;
 	        if (input_state.button_pressed || !input_state.has_recently_connected) {
 	          	curr_state->state = OFF;
 	        } else if (fabs(diff) < angle_threshold) {
@@ -119,21 +121,21 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 	        if (input_state.button_pressed || !input_state.has_recently_connected) {
 	          	curr_state->state = OFF;
 	        } else if ((fmax(fabs(diff_left), fabs(diff_right)) < distance_threshold)) {
-	            output->notify_ack = 0;
+	            output.notify_ack = 0;
 	            //transition out of driving
 	            //transition into waiting
-	            state = WAITING;
+	            curr_state->state = WAITING;
 	        } else {
 	          curr_state->total_distance_traveled_left += measure_distance(input_state.left_encoder, curr_state->previous_left_encoder);
 	          curr_state->total_distance_traveled_right += measure_distance(input_state.right_encoder, curr_state->previous_right_encoder);
-		      curr_state->position_x = fmin(curr_state->total_distance_left, curr_state->total_distance_right);
+		      curr_state->position_x = fmin(curr_state->total_distance_traveled_left, curr_state->total_distance_traveled_right);
 	          //total_distance = (.5 * total_distance_left) + (.5 * total_distance_right);
 	          curr_state->previous_left_encoder = input_state.left_encoder;
 	          curr_state->previous_right_encoder = input_state.right_encoder;
 	          //Wheel diff might not work if backwards :(
 	          output.left_speed = sign_left * fmax(fabs(k_dist * diff_left - k_diff * wheel_diff), 70);
 	          output.right_speed = sign_right * fmax(fabs(k_dist * diff_right + k_diff * wheel_diff), 70);
-	          state = DRIVING_FORWARD;
+	          curr_state->state = DRIVING_FORWARD;
 	        }
         	break;
      	}
@@ -145,59 +147,59 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
      		transition_out(input_state, curr_state, old_state);
      		transition_in(input_state, curr_state);
     }
-	print_state(*curr_state, &(output.display_line_0), &(output.display_line_1));
+	print_state(*curr_state, output.display_line_0, output.display_line_1);
 	return output;
 }
 
 void print_state(system_state_t current_state, char* display_line_0, char* display_line_1){
 	switch(current_state.state){
-	case OFF: {
-		snprintf(display_line_0, 16, "OFF");
-        snprintf(display_line_1, 16, "");
-		break;
-      }
-	case WAITING: {
-		snprintf(display_line_0, 16, "WAITING");
-        snprintf(display_line_1, 16, "");
-		break;
-    }
-	case TURNING: {
-        snprintf(display_line_0, 16, "TURN TARGET: %f", current_state.curr_waypoint_angle);
-        snprintf(display_line_1, 16, "ANGLE CUR: %f", current_state.curr_orientation_angle);
-		break;
-    }
-	case DRIVING_FORWARD: {
-        snprintf(display_line_0, 16, "TARGET: %.2f", current_state.distance_to_travel);
-        snprintf(display_line_1, 16, "X: %.2f Y: %.2f", current_state.position_x, current_state.position_y);
-		break;
-    }
-    case DRIVING_BACKWARD: {
-    	snprintf(display_line_0, 16, "REVERSE");
-    	snprintf(display_line_1, 16, "X: %.2f Y: %.2f", current_state.position_x, current_state.position_y);
+		case OFF: {
+			snprintf(display_line_0, 16, "OFF");
+	        snprintf(display_line_1, 16, "");
+			break;
+	      }
+		case WAITING: {
+			snprintf(display_line_0, 16, "WAITING");
+	        snprintf(display_line_1, 16, "");
+			break;
+	    }
+		case TURNING: {
+	        snprintf(display_line_0, 16, "TURN TARGET: %f", current_state.turn_angle);
+	        snprintf(display_line_1, 16, "ANGLE CUR: %f", current_state.curr_orientation_angle);
+			break;
+	    }
+		case DRIVING_FORWARD: {
+	        snprintf(display_line_0, 16, "TARGET: %.2f", current_state.distance_to_travel);
+	        snprintf(display_line_1, 16, "X: %.2f Y: %.2f", current_state.position_x, current_state.position_y);
+			break;
+	    }
+	    case DRIVING_BACKWARD: {
+	    	snprintf(display_line_0, 16, "REVERSE");
+	    	snprintf(display_line_1, 16, "X: %.2f Y: %.2f", current_state.position_x, current_state.position_y);
 
-    }
-    case DRIVING_STOP_HIT: {
-    	snprintf(display_line_0, 16, "OUCH");
-    	if(current_state.most_recent_bump == LEFT_BUMP){
-    		snprintf(display_line_1, 16, "Left/Center Hit");
+	    }
+	    case DRIVING_STOP_HIT: {
+	    	snprintf(display_line_0, 16, "OUCH");
+	    	if(current_state.most_recent_bump == LEFT_BUMP){
+	    		snprintf(display_line_1, 16, "Left/Center Hit");
 
-    	}
-    	else if(current_state.most_recent_bump == RIGHT_BUMP){
-    		snprintf(display_line_1, 16, "Right Hit");
-    	}
-    	else {
-    		snprintf(display_line_1, 16, "No Hit???");
-    	}
-    }
-    case DRIVING_TURNING: {
-    	snprintf(display_line_0, 16, "TURN TARGET: %f", current_state.turn_angle);
-        snprintf(display_line_1, 16, "ANGLE CUR: %f", current_state.curr_orientation_angle);
-		break;
-    }
-    case DRIVING_AVOIDANCE: {
-    	snprintf(display_line_0, 16, "TARGET: %.2f", current_state.avoidance_distance);
-        snprintf(display_line_1, 16, "X: %.2f Y: %.2f", current_state.position_x, current_state.position_y);
-		break;
-    }
-    
+	    	}
+	    	else if(current_state.most_recent_bump == RIGHT_BUMP){
+	    		snprintf(display_line_1, 16, "Right Hit");
+	    	}
+	    	else {
+	    		snprintf(display_line_1, 16, "No Hit???");
+	    	}
+	    }
+	    case DRIVING_TURNING: {
+	    	snprintf(display_line_0, 16, "TURN TARGET: %f", current_state.turn_angle);
+	        snprintf(display_line_1, 16, "ANGLE CUR: %f", current_state.curr_orientation_angle);
+			break;
+	    }
+	    case DRIVING_AVOIDANCE: {
+	    	snprintf(display_line_0, 16, "TARGET: %.2f", current_state.avoidance_distance);
+	        snprintf(display_line_1, 16, "X: %.2f Y: %.2f", current_state.position_x, current_state.position_y);
+			break;
+	    }
+	}
 }

@@ -37,7 +37,8 @@ class RobotController():
 
         while True:
             #ack = int(binascii.b2a_hex(self.ack.read())[:2], 16)
-            ack, = struct.unpack("Bxxx", self.ack.read())
+            ack, = struct.unpack("i", self.ack.read())
+            print(ack)
             if ack==0:
                 r = float(input("Distance (m): "))
                 t = float(input("Angle (degrees): "))

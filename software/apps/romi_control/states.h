@@ -33,7 +33,6 @@
 #include "lsm9ds1.h"
 #include "simple_ble.h"
 
-#include "helpers.h"
 #include "outputs.h"
 #include "inputs.h"
 
@@ -43,7 +42,7 @@ typedef enum {
     WAITING=1,
     TURNING=2,
     DRIVING_FORWARD=3,
-    DRIVING_BACKWARDS=4,
+    DRIVING_BACKWARD=4,
     DRIVING_STOP_HIT=5,
     DRIVING_TURNING=6,
     DRIVING_AVOIDANCE=7,
@@ -66,20 +65,20 @@ typedef struct system_state {
 	float avoidance_distance;
 	float position_x;
 	float position_y;
-	float curr_waypoint_distance;
-	float curr_waypoint_angle;
+	// float curr_waypoint_distance;
+	// float curr_waypoint_angle;
 	float curr_orientation_angle;
 	float turn_angle;
 	float distance_to_travel;
 } system_state_t;
 
 
-void transition_in(system_state_t* curr_state);
-void transition_out(system_state_t* curr_state, states old_state);
+void transition_in(inputs_t input_state, system_state_t* curr_state);
+void transition_out(inputs_t input_state, system_state_t* curr_state, states old_state);
 
-void print_state(system_state_t* curr_state);
+void print_state(system_state_t current_state, char* display_line_0, char* display_line_1);
 
-struct outputs transition(struct inputs input_state, system_state_t* curr_state);
+outputs_t transition(inputs_t input_state, system_state_t* curr_state);
 
 system_state_t init_state();
 

@@ -55,6 +55,7 @@ typedef struct inputs {
 
 inputs_t get_inputs();
 
-
+void stop_gyro_integration();
+void start_gyro_integration();
 
 #endif /* INPUTS_H_ */
