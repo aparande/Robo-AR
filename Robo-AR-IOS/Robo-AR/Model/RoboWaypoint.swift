@@ -3,8 +3,15 @@ import UIKit
 import RealityKit
 
 class RoboWaypoint: ARPoint {
+       
+    var lastKnownWaypointDistance: Float?
+    var lastKnownWaypointAngle: Float?
+    var waypointLastKnownAngleTo: Float?
+    var waypointLastKnownNumber: Int?
+    var isTracking: Bool;
     
     required init(color: UIColor) {
+        isTracking = false;
         super.init(color: color, text: "Robot")
         addSphere()
     }

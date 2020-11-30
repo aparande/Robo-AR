@@ -28,8 +28,4 @@ class Waypoint: ARPoint {
     required init() {
         fatalError("init() has not been implemented")
     }
-        
-    override func angleTo(_ other: ARPoint) -> Float {
-        return self.parent!.position.horizontalAngle(to: other.parent!.position)
-    }
 }

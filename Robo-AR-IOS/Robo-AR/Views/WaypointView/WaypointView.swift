@@ -48,7 +48,7 @@ class WaypointView: ARView {
             print("Raycast failed")
             return
         }
-
+        
         var transformation = Transform(matrix: result.worldTransform)
         transformation.translation += [0, 0.1, 0]
         
@@ -76,22 +76,35 @@ class WaypointView: ARView {
         
         roboBox.transform = transformation
         roboBox.setOrientation(simd_quatf(angle: .pi/4, axis: [0, 0, 1]), relativeTo: roboBox)
-
+        roboBox.isTracking = anchor.isTracked
         let robotEntity = AnchorEntity(anchor: anchor)
         robotEntity.addChild(roboBox)
         
         self.scene.addAnchor(robotEntity)
         self.robot = roboBox
+        
     }
     
     func updateRobot(anchor: ARImageAnchor){
         
         var transformation = Transform(matrix: anchor.transform)
         transformation.translation += [0, 0.02, 0]
-        
         if let robot = self.robot {
+            
+            if(robot.isTracking != anchor.isTracked){
+                print("TRACKING CHANGE: ",  anchor.isTracked)
+            }
+            robot.isTracking = anchor.isTracked
+            
             robot.transform = transformation
             robot.setOrientation(simd_quatf(angle: .pi/4, axis: [0, 0, 1]), relativeTo: robot)
+            if(currentWayPoint != nil){
+                robot.lastKnownWaypointAngle = robot.angleTo(currentWayPoint!)
+                robot.lastKnownWaypointDistance = robot.distanceTo(currentWayPoint!)
+                robot.waypointLastKnownAngleTo = currentWayPoint!.angleTo(robot);
+                robot.waypointLastKnownNumber = currentWayPoint!.number
+                
+            }
         } else {
             self.addRobot(anchor: anchor)
         }

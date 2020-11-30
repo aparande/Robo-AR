@@ -40,25 +40,69 @@ class ViewController: BLEViewController {
     }
     
     @IBAction func startTransmission(_ sender: Any) {
-        if let inst = compileNextInstruction() {
+        if let inst = compileNextInstruction(fromAck: false) {
             sendInstruction(instruction: inst)
         }
     }
     
-    override func compileNextInstruction() -> Instruction? {
+    override func compileNextInstruction(fromAck: Bool) -> Instruction? {
         guard let robot = arView.robot else { return nil }
         
-        if let currentWaypoint = arView.currentWayPoint {
-            if(robot.distanceTo(currentWaypoint) < 0.10){
-                arView.currentWayPoint = currentWaypoint.next
+    
+
+        print("ROBOT TRACKING", robot.isTracking)
+        if(robot.isTracking){
+            if let currentWaypoint = arView.currentWayPoint {
+            
+                if(robot.distanceTo(currentWaypoint) < 0.10){
+                    arView.currentWayPoint = currentWaypoint.next
+                    arView.waypoints.head = arView.currentWayPoint
+                }
+            } else {
+                arView.currentWayPoint = arView.waypoints.head
             }
+        
+            guard let waypoint = arView.currentWayPoint else { return nil }
+            
+            return Instruction(distance: robot.distanceTo(waypoint), angle: robot.angleTo(waypoint), waypointNumber: waypoint.number)
         } else {
-            arView.currentWayPoint = arView.waypoints.head
+            
+            guard let waypoint = arView.currentWayPoint else {return nil}
+        
+            if(!fromAck){
+                return Instruction(distance: robot.lastKnownWaypointDistance!, angle: robot.lastKnownWaypointAngle!, waypointNumber: waypoint.number)
+            }
+            else {
+                guard let nextWaypoint = waypoint.next else { return nil }
+                
+                
+                var prevAngle: Float;
+                if(waypoint.number == robot.waypointLastKnownNumber){
+                    prevAngle = 180 - robot.waypointLastKnownAngleTo!
+                } else{
+                    guard let prevWaypoint = waypoint.prev else {return nil}
+                    
+                    prevAngle = 180 - waypoint.distanceTo(prevWaypoint)
+                    print("PREVANGLE", prevAngle)
+                    
+                }
+                
+                let nextAngle = waypoint.angleTo(nextWaypoint)
+                
+                let finalAngle = nextAngle + prevAngle
+                print("ANGLES!!!")
+                print(prevAngle)
+                print(nextAngle)
+                print(finalAngle)
+                arView.currentWayPoint = nextWaypoint
+                
+                return Instruction(distance: waypoint.distanceTo(nextWaypoint), angle: finalAngle, waypointNumber: nextWaypoint.number)
+                
+            }
+            
+            
         }
         
-        guard let waypoint = arView.currentWayPoint else { return nil }
-        
-        return Instruction(distance: robot.distanceTo(waypoint), angle: robot.angleTo(waypoint), waypointNumber: waypoint.number)
     }
 }
 
@@ -76,5 +120,11 @@ extension ViewController: ARSessionDelegate {
               let _ = imageAnchor.referenceImage.name
         else { return }
         arView.updateRobot(anchor: imageAnchor)
+    }
+    
+    func session(_ session: ARSession, didRemove anchors: [ARAnchor]) {
+        guard let imageAnchor = anchors.first as? ARImageAnchor,
+              let _ = imageAnchor.referenceImage.name
+        else { return }
     }
 }
