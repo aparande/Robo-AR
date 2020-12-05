@@ -45,11 +45,10 @@ class ViewController: BLEViewController {
         }
     }
     
+
     override func compileNextInstruction(fromAck: Bool) -> Instruction? {
         guard let robot = arView.robot else { return nil }
         
-    
-
         print("ROBOT TRACKING", robot.isTracking)
         if(robot.isTracking){
             if let currentWaypoint = arView.currentWayPoint {
@@ -119,6 +118,7 @@ extension ViewController: ARSessionDelegate {
         guard let imageAnchor = anchors.first as? ARImageAnchor,
               let _ = imageAnchor.referenceImage.name
         else { return }
+        
         arView.updateRobot(anchor: imageAnchor)
     }
     
