@@ -48,6 +48,8 @@ simple_ble_app_t* simple_ble_app;
 const float CONVERSION;
 const float angle_threshold;
 const float distance_threshold;
+
+bool is_gyro_integrating = false;
 int k_dist;
 int k_diff;
 uint16_t min_angle_speed;
@@ -61,6 +63,8 @@ bool connected;
 
 
 float measure_distance(uint16_t current_encoder, uint16_t previous_encoder);
+
+float angle_modulo(float possible_angle);
 
 void setup();
 
