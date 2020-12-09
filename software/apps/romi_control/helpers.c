@@ -7,7 +7,7 @@
 
 KobukiSensors_t sensors = {0};
 ret_code_t error_code = NRF_SUCCESS;
-is_gyro_integrating = false;
+bool is_gyro_integrating = false;
 
 // Intervals for advertising and connections
 simple_ble_config_t ble_config = {
@@ -127,9 +127,9 @@ float measure_distance(uint16_t current_encoder, uint16_t previous_encoder) {
 float angle_modulo(float possible_angle){
 
   if(possible_angle > 0){
-    return fmodf(angle_modulo + 180, 360) - 180; 
+    return fmodf(possible_angle + 180, 360) - 180; 
   } else {
-    return -1 * (fmodf((-1 * angle_modulo) + 180, 360) - 180);
+    return -1 * (fmodf((-1 * possible_angle) + 180, 360) - 180);
   }
 }
 

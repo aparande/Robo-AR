@@ -49,7 +49,7 @@ const float CONVERSION;
 const float angle_threshold;
 const float distance_threshold;
 
-bool is_gyro_integrating = false;
+bool is_gyro_integrating;
 int k_dist;
 int k_diff;
 uint16_t min_angle_speed;

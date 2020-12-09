@@ -48,7 +48,7 @@ typedef enum {
 	FORWARD=0,
 	STOPPED=1,
 	BACKWARD=2,
-	TURNING=3,
+	ROTATING=3,
 	AVOIDANCE=4,
 } substates;
 

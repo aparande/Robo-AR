@@ -180,7 +180,7 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 }
 
 
-void print_substate(system_state_t current_state, char* display_line0, char* display_line_1){
+void print_substate(system_state_t current_state, char* display_line_0, char* display_line_1){
 
 	switch(current_state.substate.substate){
 		case FORWARD: 
@@ -205,7 +205,7 @@ void print_substate(system_state_t current_state, char* display_line0, char* dis
 				snprintf(display_line_1, 16, "No Hit???");
 			}
 		}
-		case TURNING: {
+		case ROTATING: {
 			snprintf(display_line_0, 16, "TURN TARGET: %f", current_state.turn_angle);
 			snprintf(display_line_1, 16, "ANGLE CUR: %f", current_state.curr_orientation_angle);
 			break;
@@ -252,7 +252,7 @@ void print_state(system_state_t current_state, char* display_line_0, char* displ
 driving_substate_t init_substate() {
 	driving_substate_t ret_substate = {0};
 	ret_substate.substate = FORWARD;
-	return ret_system;
+	return ret_substate;
 }
 
 void substate_transition_in(inputs_t input_state, driving_substate_t* curr_state){
@@ -276,7 +276,7 @@ void substate_transition_in(inputs_t input_state, driving_substate_t* curr_state
 			curr_state->stopping_timer = 0;
 			break;
 		}
-		case TURNING: {
+		case ROTATING: {
 			stop_gyro_integration();
 			start_gyro_integration();
 			curr_state->relative_orientation_angle = 0;
@@ -309,7 +309,7 @@ void substate_transition_out(inputs_t input_state, driving_substate_t* curr_stat
 			curr_state->stopping_timer = 0;
 			break;
 		}
-		case TURNING: {
+		case ROTATING: {
 			stop_gyro_integration();
 			curr_state->turn_angle_substate = 0;
 			curr_state->relative_orientation_angle = 0;
@@ -348,8 +348,8 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 			int8_t sign_left = (2 * (diff_left > 0)) - 1;
 			int8_t sign_right = (2 * (diff_right > 0)) - 1;
 			
-			float dist_traveled_left = measure_distance(input_state.left_encoder, curr_state->previous_left_encoder);
-			float dist_traveled_right += measure_distance(input_state.right_encoder, curr_state->previous_right_encoder);
+			float dist_traveled_left = measure_distance(input_state.left_encoder, curr_state->substate.previous_left_encoder);
+			float dist_traveled_right = measure_distance(input_state.right_encoder, curr_state->substate.previous_right_encoder);
 			curr_state->substate.total_distance_traveled_left += dist_traveled_left;
 			curr_state->substate.total_distance_traveled_right += dist_traveled_right;
 
@@ -391,8 +391,8 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 				// should never happen
 				curr_state->turn_angle = curr_state->curr_orientation_angle;
 			}
-			curr_state->next_state_turning = AVOIDANCE;
-			curr_state->substate.substate = TURNING;
+			curr_state->substate.next_state_turning = AVOIDANCE;
+			curr_state->substate.substate = ROTATING;
 			break;
 		}
 		else {
@@ -405,8 +405,8 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 			int8_t sign_left = (2 * (diff_left > 0)) - 1;
 			int8_t sign_right = (2 * (diff_right > 0)) - 1;
 			
-			float dist_traveled_left = measure_distance(curr_state->previous_left_encoder, input_state.left_encoder);
-			float dist_traveled_right += measure_distance(curr_state->previous_right_encoder, input_state.right_encoder);
+			float dist_traveled_left = measure_distance(curr_state->substate.previous_left_encoder, input_state.left_encoder);
+			float dist_traveled_right = measure_distance(curr_state->substate.previous_right_encoder, input_state.right_encoder);
 			curr_state->substate.total_distance_traveled_left += dist_traveled_left;
 			curr_state->substate.total_distance_traveled_right += dist_traveled_right;
 
@@ -421,13 +421,13 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 			break;
 		}
 	}
-	case TURNING: {
+	case ROTATING: {
 		curr_state->substate.relative_orientation_angle = input_state.gyro_integration_z_value; 
 	    float diff = curr_state->substate.turn_angle_substate - curr_state->substate.relative_orientation_angle;
 	    
 		if (fabs(diff) < angle_threshold) {
 			curr_state->curr_orientation_angle = angle_modulo(curr_state->curr_orientation_angle + curr_state->substate.relative_orientation_angle);
-			curr_state->substate.substate = curr_state->next_state_turning;
+			curr_state->substate.substate = curr_state->substate.next_state_turning;
 			break;
 		}
 		else {
@@ -435,7 +435,7 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 			int16_t speed = sign * fmax(.8 * fabs(diff), min_angle_speed);
 			output.left_speed = -speed;
 			output.right_speed = speed;
-			curr_state->substate.substate = TURNING;
+			curr_state->substate.substate = ROTATING;
 			break;
 		}
 	}
@@ -454,27 +454,28 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 			
 			curr_state->substate.turn_angle_substate = angle_modulo(atan2f(curr_state->position_y, curr_state->position_x - curr_state->distance_to_travel) * 180 / M_PI);
 			curr_state->substate.next_state_turning = FORWARD;
-			curr_state->substate.substate = TURNING;
+			curr_state->substate.substate = ROTATING;
+		} else {
+		
+			float wheel_diff = diff_right - diff_left;
+			int8_t sign_left = (2 * (diff_left > 0)) - 1;
+			int8_t sign_right = (2 * (diff_right > 0)) - 1;
+			
+			float dist_traveled_left = measure_distance(input_state.left_encoder, curr_state->substate.previous_left_encoder);
+			float dist_traveled_right = measure_distance(input_state.right_encoder, curr_state->substate.previous_right_encoder);
+			curr_state->substate.total_distance_traveled_left += dist_traveled_left;
+			curr_state->substate.total_distance_traveled_right += dist_traveled_right;
+
+			float avg_dist = (dist_traveled_right + dist_traveled_left) / 2;
+			curr_state->position_x += cosf(curr_state->curr_orientation_angle * M_PI / 180) * avg_dist;
+			curr_state->position_y += sinf(curr_state->curr_orientation_angle * M_PI / 180) * avg_dist;
+
+			curr_state->substate.previous_left_encoder = input_state.left_encoder;
+			curr_state->substate.previous_right_encoder = input_state.right_encoder;
+			output.left_speed = sign_left * fmax(fabs(k_dist * diff_left - k_diff * wheel_diff), min_drive_speed);
+			output.right_speed = sign_right * fmax(fabs(k_dist * diff_right + k_diff * wheel_diff), min_drive_speed);
+			break;
 		}
-		
-		float wheel_diff = diff_right - diff_left;
-		int8_t sign_left = (2 * (diff_left > 0)) - 1;
-		int8_t sign_right = (2 * (diff_right > 0)) - 1;
-		
-		float dist_traveled_left = measure_distance(input_state.left_encoder, curr_state->previous_left_encoder);
-		float dist_traveled_right += measure_distance(input_state.right_encoder, curr_state->previous_right_encoder);
-		curr_state->substate.total_distance_traveled_left += dist_traveled_left;
-		curr_state->substate.total_distance_traveled_right += dist_traveled_right;
-
-		float avg_dist = (dist_traveled_right + dist_traveled_left) / 2;
-		curr_state->position_x += cosf(curr_state->curr_orientation_angle * M_PI / 180) * avg_dist;
-		curr_state->position_y += sinf(curr_state->curr_orientation_angle * M_PI / 180) * avg_dist;
-
-		curr_state->substate.previous_left_encoder = input_state.left_encoder;
-		curr_state->substate.previous_right_encoder = input_state.right_encoder;
-		output.left_speed = sign_left * fmax(fabs(k_dist * diff_left - k_diff * wheel_diff), min_drive_speed);
-		output.right_speed = sign_right * fmax(fabs(k_dist * diff_right + k_diff * wheel_diff), min_drive_speed);
-		break;
 	}
 	default:
 		break;
