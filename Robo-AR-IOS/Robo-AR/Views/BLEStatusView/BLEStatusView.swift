@@ -11,6 +11,7 @@ import UIKit
 enum BLEStatus {
     case connected, connecting, transmitting
     case done
+    case disconnected
 }
 
 class BLEStatusView: UIView {
@@ -69,6 +70,12 @@ class BLEStatusView: UIView {
                 loadingIndicator.stopAnimating()
                 
                 instruction = nil
+            case .disconnected:
+                statusLabel.text = "Disconnected"
+                contentView.backgroundColor = statusRed
+                
+                loadingIndicator.isHidden = true
+                loadingIndicator.stopAnimating()
             }
         }
     }

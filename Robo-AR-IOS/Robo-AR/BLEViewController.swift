@@ -149,5 +149,10 @@ extension BLEViewController: CBPeripheralDelegate {
             print("Unhandled characteristic UUID: \(characteristic.uuid)")
         }
     }
+    
+    func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+        bleStatusView?.status = .disconnected
+        print("Romi Disconnected")
+    }
 }
 
