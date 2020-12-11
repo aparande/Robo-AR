@@ -53,24 +53,23 @@ class ViewController: BLEViewController {
         }
         
         guard let waypoint = arView.currentWayPoint else { return nil }
-        
-        var inst: Instruction!
-        
+ 
         // If you have a checkpoint or know the robots location, then use it
-        if let trackedObject: TrackedObject = arView.robot ?? arView.lastCheckpoint {
-            print("Using last known location from \(type(of: trackedObject))")
-            inst = Instruction(distance: trackedObject.distanceTo(waypoint), angle: trackedObject.angleTo(waypoint), waypointNumber: waypoint.number)
+        guard let trackedObject: TrackedObject = arView.robot ?? arView.lastCheckpoint else {
+            let alertView = UIAlertController(title: "Error", message: "Need to localize robot", preferredStyle: .alert)
+            alertView.addAction(UIAlertAction(title: "Ok", style: .cancel, handler: nil))
+            self.present(alertView, animated: true, completion: nil)
             
-            // We assume the robot will achieve the checkpoint when if is not being tracked
-            arView.lastCheckpoint = Checkpoint(reference: waypoint, orientation: (arView.lastCheckpoint?.orientation ?? 0.0) + inst.angle)
-            print("Robot orientation \(arView.lastCheckpoint?.orientation)")
-        } else {
-            print("Assuming robot at origin")
-            // If you have no checkpoints and don't know the robot's location, assume the robot is oriented forward at the origin
-            inst = Instruction(distance: waypoint.distanceFromOrigin(), angle: waypoint.angleFromOrigin(), waypointNumber: waypoint.number)
-            arView.lastCheckpoint = Checkpoint(reference: waypoint, orientation: inst.angle)
+            return nil
         }
         
+        print("Using last known location from \(type(of: trackedObject))")
+        let inst = Instruction(distance: trackedObject.distanceTo(waypoint), angle: trackedObject.angleTo(waypoint), waypointNumber: waypoint.number)
+        
+        // We assume the robot will achieve the checkpoint when if is not being tracked
+        arView.lastCheckpoint = Checkpoint(reference: waypoint, orientation: (arView.lastCheckpoint?.orientation ?? 0.0) + inst.angle)
+        print("Robot orientation \(arView.lastCheckpoint?.orientation)")
+
         return inst
     }
     
