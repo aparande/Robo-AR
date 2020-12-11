@@ -16,6 +16,7 @@ class WaypointView: ARView {
     var coachingOverlay: ARCoachingOverlayView!
     var currentWayPoint: Waypoint?
     var robot: RoboWaypoint?
+    var lastCheckpoint: Checkpoint?
     
     var waypoints: WaypointList = WaypointList()
 
@@ -76,7 +77,6 @@ class WaypointView: ARView {
         
         roboBox.transform = transformation
         roboBox.setOrientation(simd_quatf(angle: .pi/4, axis: [0, 0, 1]), relativeTo: roboBox)
-        roboBox.isTracking = anchor.isTracked
         let robotEntity = AnchorEntity(anchor: anchor)
         robotEntity.addChild(roboBox)
         
@@ -97,35 +97,10 @@ class WaypointView: ARView {
         var transformation = Transform(matrix: anchor.transform)
         transformation.translation += [0, 0.02, 0]
         if let robot = self.robot {
-            
-            if(robot.isTracking != anchor.isTracked){
-                print("TRACKING CHANGE: ",  anchor.isTracked)
-            }
-            robot.isTracking = anchor.isTracked
-            
             robot.transform = transformation
             robot.setOrientation(simd_quatf(angle: .pi/4, axis: [0, 0, 1]), relativeTo: robot)
-            if(currentWayPoint != nil){
-                robot.lastKnownWaypointAngle = robot.angleTo(currentWayPoint!)
-                robot.lastKnownWaypointDistance = robot.distanceTo(currentWayPoint!)
-                robot.waypointLastKnownAngleTo = currentWayPoint!.angleTo(robot);
-                robot.waypointLastKnownNumber = currentWayPoint!.number
-                
-            }
         } else {
             self.addRobot(anchor: anchor)
         }
-    }
-}
-
-extension SIMD3 where Scalar == Float {
-    var lengthHorizontal: Float {
-        return sqrtf(x * x  + z * z)
-    }
-    
-    func horizontalAngle(to other:SIMD3) -> Float {
-        // x axis is oriented such that positive is right
-        // z axis is oriented such that positive is towards the user (which is why it is flipped from the angle calculation
-        return -atan2f(other.x - self.x, self.z - other.z) * 180 / .pi
     }
 }

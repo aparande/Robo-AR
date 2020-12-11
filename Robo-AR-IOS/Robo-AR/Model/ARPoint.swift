@@ -11,6 +11,7 @@ import RealityKit
 
 class ARPoint: Entity, HasModel, HasAnchoring, HasCollision {
     var text:String
+    var forwardAngle = SIMD3<Float>(0.0, 0.0, -1.0)
     
     init(color: UIColor, text: String) {
         self.text = text
@@ -36,15 +37,21 @@ class ARPoint: Entity, HasModel, HasAnchoring, HasCollision {
     }
     
     func angleTo(_ other: ARPoint) -> Float {
-        
         var diff = other.parent!.position(relativeTo: self.parent!)
+        print("vector between two points is \(diff)")
         diff.y = 0
-        let forwardAngle = SIMD3<Float>(0.0, 0.0, 1.0)
-        var angle = acos(dot(forwardAngle, diff) / length(diff)) * 180 / .pi
-        if(cross(forwardAngle, diff).y  < 0){
-            angle = -1 * angle
-        }
-        return angle
+        return forwardAngle.horizontalAngle(to: diff)
+    }
+    
+    func distanceFromOrigin() -> Float {
+        return self.parent!.position.lengthHorizontal
+    }
+    
+    func angleFromOrigin() -> Float {
+        var diff = self.parent!.position
+        print("vector between two points is \(diff)")
+        diff.y = 0
+        return forwardAngle.horizontalAngle(to: diff)
     }
     
     private func constructText() {
