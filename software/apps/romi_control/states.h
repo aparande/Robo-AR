@@ -1,7 +1,7 @@
 #ifndef STATES_H_
 #define STATES_H_
 
-#define TIME_MAX 20
+#define TIME_MAX 200
 #define AVOID_DIST_INCR 0.5
 #define BACKWARD_DIST 0.3
 
