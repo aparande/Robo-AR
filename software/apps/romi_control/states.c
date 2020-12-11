@@ -393,10 +393,10 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 
 		if(fabs(diff) < distance_threshold){
 			if(curr_state->substate.most_recent_bump == LEFT_BUMP){
-				curr_state->substate.turn_angle_substate = 45;
+				curr_state->substate.turn_angle_substate = -45;
 			}
 			else if(curr_state->substate.most_recent_bump == RIGHT_BUMP){
-				curr_state->substate.turn_angle_substate = -45;
+				curr_state->substate.turn_angle_substate = 45;
 			}
 			else {
 				// should never happen
