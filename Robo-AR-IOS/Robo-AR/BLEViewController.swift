@@ -49,7 +49,7 @@ class BLEViewController: UIViewController {
         bleStatusView?.status = .transmitting
     }
     
-    func compileNextInstruction() -> Instruction? {
+    func compileNextInstruction(fromAck: Bool) -> Instruction? {
         preconditionFailure("Compile Next Instruction Not Implemented")
     }
 }
@@ -136,7 +136,7 @@ extension BLEViewController: CBPeripheralDelegate {
             }) else { print("Couldn't get characteristic value"); return; }
             
             if acknowledge == 0 {
-                if let inst = compileNextInstruction() {
+                if let inst = compileNextInstruction(fromAck: true) {
                     sendInstruction(instruction: inst)
                 } else {
                     print("Finished executing instructions")

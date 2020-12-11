@@ -40,26 +40,53 @@ class ViewController: BLEViewController {
     }
     
     @IBAction func startTransmission(_ sender: Any) {
-        if let inst = compileNextInstruction() {
+        if let inst = compileNextInstruction(fromAck: false) {
+            self.generateButton.isEnabled = false
             sendInstruction(instruction: inst)
         }
     }
     
-    override func compileNextInstruction() -> Instruction? {
-        
-        guard let robot = arView.robot ?? arView.currentWayPoint else { return nil }
-        
-        if let currentWaypoint = arView.currentWayPoint {
-            if(robot.distanceTo(currentWaypoint) < 0.10){
-                arView.currentWayPoint = currentWaypoint.next
-            }
-        } else {
-            arView.currentWayPoint = arView.waypoints.head
+
+    override func compileNextInstruction(fromAck: Bool) -> Instruction? {
+        if fromAck {
+            setNextTarget()
         }
         
         guard let waypoint = arView.currentWayPoint else { return nil }
+ 
+        // If you have a checkpoint or know the robots location, then use it
+        guard let trackedObject: TrackedObject = arView.robot ?? arView.lastCheckpoint else {
+            let alertView = UIAlertController(title: "Error", message: "Need to localize robot", preferredStyle: .alert)
+            alertView.addAction(UIAlertAction(title: "Ok", style: .cancel, handler: nil))
+            self.present(alertView, animated: true, completion: nil)
+            
+            return nil
+        }
         
-        return Instruction(distance: robot.distanceTo(waypoint), angle: robot.angleTo(waypoint), waypointNumber: waypoint.number)
+        print("Using last known location from \(type(of: trackedObject))")
+        let inst = Instruction(distance: trackedObject.distanceTo(waypoint), angle: trackedObject.angleTo(waypoint), waypointNumber: waypoint.number)
+        
+        // We assume the robot will achieve the checkpoint when if is not being tracked
+        arView.lastCheckpoint = Checkpoint(reference: waypoint, orientation: (arView.lastCheckpoint?.orientation ?? 0.0) + inst.angle)
+        print("Robot orientation \(arView.lastCheckpoint?.orientation)")
+
+        return inst
+    }
+    
+    private func setNextTarget() {
+        guard let currentWaypoint = arView.currentWayPoint else { return }
+        
+        if let robot = arView.robot {
+            if (robot.distanceTo(currentWaypoint) < 0.10) {
+                print("Accurately hit waypoint")
+                arView.currentWayPoint = currentWaypoint.next
+                arView.waypoints.head = arView.currentWayPoint
+            }
+        } else {
+            print("Can't see robot. Assuming it was accurate")
+            arView.currentWayPoint = currentWaypoint.next
+            arView.waypoints.head = arView.currentWayPoint
+        }
     }
 }
 
@@ -78,5 +105,11 @@ extension ViewController: ARSessionDelegate {
         else { return }
         
         arView.updateRobot(anchor: imageAnchor)
+    }
+    
+    func session(_ session: ARSession, didRemove anchors: [ARAnchor]) {
+        guard let imageAnchor = anchors.first as? ARImageAnchor,
+              let _ = imageAnchor.referenceImage.name
+        else { return }
     }
 }
