@@ -21,6 +21,9 @@
 		1FCD3D772572F39900A0F92F /* WaypointList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCD3D762572F39900A0F92F /* WaypointList.swift */; };
 		1FCD3D7A2572F3BB00A0F92F /* ARPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCD3D792572F3BB00A0F92F /* ARPoint.swift */; };
 		1FD5FD892550A8870028A42A /* Waypoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD5FD882550A8870028A42A /* Waypoint.swift */; };
+		1FFB1EF5258429D100A6B3DD /* TrackedObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFB1EF2258429D100A6B3DD /* TrackedObject.swift */; };
+		1FFB1EF6258429D100A6B3DD /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFB1EF3258429D100A6B3DD /* Utils.swift */; };
+		1FFB1EF7258429D100A6B3DD /* Checkpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFB1EF4258429D100A6B3DD /* Checkpoint.swift */; };
 		6B9F2E702566E559001F4297 /* RoboWaypoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B9F2E6F2566E558001F4297 /* RoboWaypoint.swift */; };
 /* End PBXBuildFile section */
 
@@ -41,6 +44,9 @@
 		1FCD3D762572F39900A0F92F /* WaypointList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WaypointList.swift; sourceTree = "<group>"; };
 		1FCD3D792572F3BB00A0F92F /* ARPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARPoint.swift; sourceTree = "<group>"; };
 		1FD5FD882550A8870028A42A /* Waypoint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Waypoint.swift; sourceTree = "<group>"; };
+		1FFB1EF2258429D100A6B3DD /* TrackedObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TrackedObject.swift; sourceTree = "<group>"; };
+		1FFB1EF3258429D100A6B3DD /* Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
+		1FFB1EF4258429D100A6B3DD /* Checkpoint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Checkpoint.swift; sourceTree = "<group>"; };
 		6B9F2E6F2566E558001F4297 /* RoboWaypoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoboWaypoint.swift; sourceTree = "<group>"; };
 		AB0710D5264ECCFFF2A2C563 /* Pods_Robo_AR.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Robo_AR.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -119,6 +125,9 @@
 		1FCD3D742572F33500A0F92F /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				1FFB1EF4258429D100A6B3DD /* Checkpoint.swift */,
+				1FFB1EF2258429D100A6B3DD /* TrackedObject.swift */,
+				1FFB1EF3258429D100A6B3DD /* Utils.swift */,
 				1F6CE920255E567500C0B2EC /* Instruction.swift */,
 				1FCD3D762572F39900A0F92F /* WaypointList.swift */,
 				1FD5FD882550A8870028A42A /* Waypoint.swift */,
@@ -209,9 +218,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				1F536D5725623E3B00A715A3 /* BLEViewController.swift in Sources */,
+				1FFB1EF7258429D100A6B3DD /* Checkpoint.swift in Sources */,
 				1F474BAF25565B7800C22F8C /* WaypointView.swift in Sources */,
 				1FCD3D772572F39900A0F92F /* WaypointList.swift in Sources */,
+				1FFB1EF5258429D100A6B3DD /* TrackedObject.swift in Sources */,
 				1F811CC425717EA300A8AD16 /* BLEStatusView.swift in Sources */,
+				1FFB1EF6258429D100A6B3DD /* Utils.swift in Sources */,
 				1FD5FD892550A8870028A42A /* Waypoint.swift in Sources */,
 				1F23F2B925509345001DFED1 /* ViewController.swift in Sources */,
 				1F23F2B725509345001DFED1 /* AppDelegate.swift in Sources */,

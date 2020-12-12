@@ -41,67 +41,57 @@ class ViewController: BLEViewController {
     
     @IBAction func startTransmission(_ sender: Any) {
         if let inst = compileNextInstruction(fromAck: false) {
+            self.generateButton.isEnabled = false
+
             sendInstruction(instruction: inst)
         }
     }
     
 
     override func compileNextInstruction(fromAck: Bool) -> Instruction? {
-        guard let robot = arView.robot else { return nil }
+        if fromAck {
+            setNextTarget()
+        }
         
-        print("ROBOT TRACKING", robot.isTracking)
-        if(robot.isTracking){
-            if let currentWaypoint = arView.currentWayPoint {
+        guard let waypoint = arView.currentWayPoint else { return nil }
+ 
+        // If you have a checkpoint or know the robots location, then use it
+        guard let trackedObject: TrackedObject = arView.robot ?? arView.lastCheckpoint else {
+            let alertView = UIAlertController(title: "Error", message: "Need to localize robot", preferredStyle: .alert)
+            alertView.addAction(UIAlertAction(title: "Ok", style: .cancel, handler: nil))
+            self.present(alertView, animated: true, completion: nil)
             
-                if(robot.distanceTo(currentWaypoint) < 0.10){
-                    arView.currentWayPoint = currentWaypoint.next
-                    arView.waypoints.head = arView.currentWayPoint
-                }
-            } else {
-                arView.currentWayPoint = arView.waypoints.head
+            return nil
+        }
+        
+        print("Using last known location from \(type(of: trackedObject))")
+        let inst = Instruction(distance: trackedObject.distanceTo(waypoint), angle: trackedObject.angleTo(waypoint), waypointNumber: waypoint.number)
+        
+        // We assume the robot will achieve the checkpoint when if is not being tracked
+        arView.lastCheckpoint = Checkpoint(reference: waypoint, orientation: (arView.lastCheckpoint?.orientation ?? 0.0) + inst.angle)
+        print("Robot orientation \(arView.lastCheckpoint?.orientation)")
+
+        return inst
+    }
+    
+    private func setNextTarget() {
+        guard let currentWaypoint = arView.currentWayPoint else { return }
+        
+        if let robot = arView.robot {
+            if (robot.distanceTo(currentWaypoint) < 0.10) {
+                print("Accurately hit waypoint")
+                arView.currentWayPoint = currentWaypoint.next
+                arView.waypoints.head = arView.currentWayPoint
             }
         
             guard let waypoint = arView.currentWayPoint else { return nil }
             
             return Instruction(distance: robot.distanceTo(waypoint), angle: robot.angleTo(waypoint), waypointNumber: waypoint.number)
         } else {
-            
-            guard let waypoint = arView.currentWayPoint else {return nil}
-        
-            if(!fromAck){
-                return Instruction(distance: robot.lastKnownWaypointDistance!, angle: robot.lastKnownWaypointAngle!, waypointNumber: waypoint.number)
-            }
-            else {
-                guard let nextWaypoint = waypoint.next else { return nil }
-                
-                
-                var prevAngle: Float;
-                if(waypoint.number == robot.waypointLastKnownNumber){
-                    prevAngle = 180 - robot.waypointLastKnownAngleTo!
-                } else{
-                    guard let prevWaypoint = waypoint.prev else {return nil}
-                    
-                    prevAngle = 180 - waypoint.distanceTo(prevWaypoint)
-                    print("PREVANGLE", prevAngle)
-                    
-                }
-                
-                let nextAngle = waypoint.angleTo(nextWaypoint)
-                
-                let finalAngle = nextAngle + prevAngle
-                print("ANGLES!!!")
-                print(prevAngle)
-                print(nextAngle)
-                print(finalAngle)
-                arView.currentWayPoint = nextWaypoint
-                
-                return Instruction(distance: waypoint.distanceTo(nextWaypoint), angle: finalAngle, waypointNumber: nextWaypoint.number)
-                
-            }
-            
-            
+            print("Can't see robot. Assuming it was accurate")
+            arView.currentWayPoint = currentWaypoint.next
+            arView.waypoints.head = arView.currentWayPoint
         }
-        
     }
 }
 

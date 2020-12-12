@@ -10,12 +10,13 @@ import UIKit
 import ARKit
 import RealityKit
 
-
-
 class WaypointView: ARView {
     var coachingOverlay: ARCoachingOverlayView!
+    
     var currentWayPoint: Waypoint?
     var robot: RoboWaypoint?
+    var lastKnownLocation: RoboWaypoint?
+    var lastCheckpoint: Checkpoint?
     
     var waypoints: WaypointList = WaypointList()
 
@@ -68,7 +69,11 @@ class WaypointView: ARView {
         }
     }
     
-    func addRobot(anchor: ARImageAnchor){
+    func addRobot(anchor: ARImageAnchor) {
+        if let anchor = lastKnownLocation?.parent as? AnchorEntity {
+            self.scene.removeAnchor(anchor)
+            self.lastKnownLocation = nil
+        }
         
         var transformation = Transform(matrix: anchor.transform)
         transformation.translation += [0, 0.02, 0]
@@ -76,19 +81,21 @@ class WaypointView: ARView {
         
         roboBox.transform = transformation
         roboBox.setOrientation(simd_quatf(angle: .pi/4, axis: [0, 0, 1]), relativeTo: roboBox)
-        roboBox.isTracking = anchor.isTracked
+        
         let robotEntity = AnchorEntity(anchor: anchor)
         robotEntity.addChild(roboBox)
         
         self.scene.addAnchor(robotEntity)
         self.robot = roboBox
-        
+        self.lastCheckpoint = Checkpoint(reference: roboBox, orientation: 0.0)
     }
     
     func updateRobot(anchor: ARImageAnchor){
         
-        if !anchor.isTracked, let anchor = self.robot?.parent as? AnchorEntity {
-            self.scene.removeAnchor(anchor)
+        if !anchor.isTracked {
+            self.robot?.isEnabled = false
+            self.lastKnownLocation = self.robot
+            
             self.robot = nil
             print("Lost track of robot")
             return
@@ -115,17 +122,5 @@ class WaypointView: ARView {
         } else {
             self.addRobot(anchor: anchor)
         }
-    }
-}
-
-extension SIMD3 where Scalar == Float {
-    var lengthHorizontal: Float {
-        return sqrtf(x * x  + z * z)
-    }
-    
-    func horizontalAngle(to other:SIMD3) -> Float {
-        // x axis is oriented such that positive is right
-        // z axis is oriented such that positive is towards the user (which is why it is flipped from the angle calculation
-        return -atan2f(other.x - self.x, self.z - other.z) * 180 / .pi
     }
 }
