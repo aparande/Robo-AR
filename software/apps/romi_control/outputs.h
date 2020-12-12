@@ -32,8 +32,8 @@
 typedef struct outputs {
 	bool notify_ack;
 	int notify_val;
-	uint16_t left_speed;
-	uint16_t right_speed;
+	int16_t left_speed;
+	int16_t right_speed;
 	char display_line_0[16];
 	char display_line_1[16];
 } outputs_t;
