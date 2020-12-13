@@ -90,17 +90,17 @@ typedef struct system_state {
 
 
 
-void transition_in(inputs_t input_state, system_state_t* curr_state);
-void transition_out(inputs_t input_state, system_state_t* curr_state, states old_state);
+void transition_in(inputs_t* input_state, system_state_t* curr_state);
+void transition_out(system_state_t* curr_state, states old_state);
 
-void substate_transition_in(inputs_t input_state, driving_substate_t* curr_state);
-void substate_transition_out(inputs_t input_state, driving_substate_t* curr_state, substates old_state);
+void substate_transition_in(inputs_t* input_state, driving_substate_t* curr_state);
+void substate_transition_out(driving_substate_t* curr_state, substates old_state);
 
 void print_state(system_state_t current_state, char* display_line_0, char* display_line_1);
 void print_substate(system_state_t current_state, char* display_line0, char* display_line_1);
 
-outputs_t transition(inputs_t input_state, system_state_t* curr_state);
-outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state);
+outputs_t transition(inputs_t* input_state, system_state_t* curr_state);
+outputs_t substate_transition(inputs_t* input_state, system_state_t* curr_state);
 
 system_state_t init_state();
 driving_substate_t init_substate();

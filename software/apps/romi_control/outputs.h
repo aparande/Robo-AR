@@ -39,7 +39,7 @@ typedef struct outputs {
 } outputs_t;
 
 
-void do_outputs(outputs_t output);
+void do_outputs(outputs_t* output);
 
 
 
