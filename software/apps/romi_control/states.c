@@ -92,7 +92,7 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 	        if (input_state.button_pressed || !input_state.has_recently_connected) {
 	          	curr_state->state = OFF;
 	        } else if (fabs(diff) < angle_threshold) {
-				if (curr_state->state = END_TURNING) {
+				if (curr_state->state == END_TURNING) {
 					//transition out of turning and into waiting
 					output.notify_ack = true;
 					curr_state->acknowledged_val = 0;
