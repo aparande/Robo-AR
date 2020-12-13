@@ -67,6 +67,7 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
           		output.right_speed = 0;
           		curr_state->state = OFF;
         	}
+			break;
 		}
 		case WAITING: {
 	        if (input_state.button_pressed || !input_state.has_recently_connected) {
