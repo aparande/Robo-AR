@@ -36,7 +36,6 @@ void transition_in(inputs_t input_state, system_state_t* curr_state) {
 			curr_state->substate.previous_right_encoder = input_state.right_encoder;
 			break;
 		}
-		default:
 	}
 }
 
@@ -53,7 +52,6 @@ void transition_out(inputs_t input_state, system_state_t* curr_state, states old
 			curr_state->substate = init_substate();
 			break;
 		}
-		default:
 	}
 }
 
@@ -131,7 +129,6 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 	        }
         	break;
      	}
-     	default:
 	}
 	output.notify_val  = curr_state->acknowledged_val;
 	if (curr_state->state != old_state) {
@@ -178,7 +175,6 @@ void print_substate(system_state_t current_state, char* display_line_0, char* di
 			snprintf(display_line_1, 16, "Y: %.2f", current_state.position_y);
 			break;
 		}
-		default:
 	}
 
 }
@@ -206,7 +202,6 @@ void print_state(system_state_t current_state, char* display_line_0, char* displ
 			print_substate(current_state, display_line_0, display_line_1);
 			break;
 	    }
-		default:
 	}
 }
 
@@ -238,7 +233,6 @@ void substate_transition_in(inputs_t input_state, driving_substate_t* curr_state
 			curr_state->relative_orientation_angle = 0;
 			break;
 		}
-		default:
 	}
 
 }
@@ -262,7 +256,6 @@ void substate_transition_out(inputs_t input_state, driving_substate_t* curr_stat
 			curr_state->relative_orientation_angle = 0;
 			break;
 		}
-		default:
 	}
 
 }
@@ -280,7 +273,7 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 			curr_state->substate.avoidance_distance += AVOID_DIST_INCR;
 			curr_state->substate.substate = STOPPED;
 		} else {
-			translation_control(curr_state, &output, 1);
+			translation_control(curr_state, input_state, &output, 1);
 		}
 		break;
 	}
@@ -315,7 +308,7 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 			curr_state->substate.substate = ROTATING;
 		}
 		else {
-			translation_control(curr_state, &output, -1);
+			translation_control(curr_state, input_state, &output, -1);
 		}
 		break;
 	}
@@ -352,11 +345,10 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 			curr_state->substate.next_state_turning = FORWARD;
 			curr_state->substate.substate = ROTATING;
 		} else {
-			translation_control(curr_state, &output, 1);
+			translation_control(curr_state, input_state, &output, 1);
 		}
 		break;
 	}
-	default:
 	}
 	if (curr_state->substate.substate != old_state) {
      		substate_transition_out(input_state, &(curr_state->substate), old_state);
@@ -365,7 +357,7 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 	return output;
 }
 
-void translation_control(system_state_t* curr_state, outputs_t* output, int dir) {
+void translation_control(system_state_t* curr_state, inputs_t input_state, outputs_t* output, int dir) {
   float diff_left = curr_state->distance_to_travel - curr_state->substate.total_distance_traveled_left;
   float diff_right = curr_state->distance_to_travel - curr_state->substate.total_distance_traveled_right;
   
@@ -384,7 +376,7 @@ void translation_control(system_state_t* curr_state, outputs_t* output, int dir)
 
   curr_state->substate.previous_left_encoder = input_state.left_encoder;
   curr_state->substate.previous_right_encoder = input_state.right_encoder;
-  *output.left_speed = dir * sign_left * fmax(fabs(k_dist * diff_left - k_diff * wheel_diff), min_drive_speed);
-  *output.right_speed = dir * sign_right * fmax(fabs(k_dist * diff_right + k_diff * wheel_diff), min_drive_speed);
+  output->left_speed = dir * sign_left * fmax(fabs(k_dist * diff_left - k_diff * wheel_diff), min_drive_speed);
+  output->right_speed = dir * sign_right * fmax(fabs(k_dist * diff_right + k_diff * wheel_diff), min_drive_speed);
 
 }
