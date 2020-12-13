@@ -357,7 +357,7 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 	return output;
 }
 
-float* translation_control(system_state_t* curr_state, inputs_t input_state, int dir, int16_t* left_pwr, int16_t* right_pwr) {
+void translation_control(system_state_t* curr_state, inputs_t input_state, int dir, int16_t* left_pwr, int16_t* right_pwr) {
   float diff_left = curr_state->distance_to_travel - curr_state->substate.total_distance_traveled_left;
   float diff_right = curr_state->distance_to_travel - curr_state->substate.total_distance_traveled_right;
   
