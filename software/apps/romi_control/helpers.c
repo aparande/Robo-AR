@@ -132,27 +132,3 @@ float angle_modulo(float possible_angle){
     return -1 * (fmodf((-1 * possible_angle) + 180, 360) - 180);
   }
 }
-
-void translation_control(system_state_t* curr_state, outputs_t* output, int dir) {
-  float diff_left = curr_state->distance_to_travel - curr_state->substate.total_distance_traveled_left;
-  float diff_right = curr_state->distance_to_travel - curr_state->substate.total_distance_traveled_right;
-  
-  float wheel_diff = diff_right - diff_left;
-  int8_t sign_left = (2 * (diff_left > 0)) - 1;
-  int8_t sign_right = (2 * (diff_right > 0)) - 1;
-  
-  float dist_traveled_left = measure_distance(input_state.left_encoder, curr_state->substate.previous_left_encoder);
-  float dist_traveled_right = measure_distance(input_state.right_encoder, curr_state->substate.previous_right_encoder);
-  curr_state->substate.total_distance_traveled_left += dist_traveled_left;
-  curr_state->substate.total_distance_traveled_right += dist_traveled_right;
-
-  float avg_dist = dir * (dist_traveled_right + dist_traveled_left) / 2;
-  curr_state->position_x += cosf(curr_state->curr_orientation_angle * M_PI / 180) * avg_dist;
-  curr_state->position_y += sinf(curr_state->curr_orientation_angle * M_PI / 180) * avg_dist;
-
-  curr_state->substate.previous_left_encoder = input_state.left_encoder;
-  curr_state->substate.previous_right_encoder = input_state.right_encoder;
-  *output.left_speed = dir * sign_left * fmax(fabs(k_dist * diff_left - k_diff * wheel_diff), min_drive_speed);
-  *output.right_speed = dir * sign_right * fmax(fabs(k_dist * diff_right + k_diff * wheel_diff), min_drive_speed);
-
-}
