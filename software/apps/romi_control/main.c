@@ -44,6 +44,6 @@ int main(void) {
     display_write(output.display_line_0, DISPLAY_LINE_0);
     display_write(output.display_line_1, DISPLAY_LINE_1);
     do_outputs(output);
-    nrf_delay_ms(10);
+    nrf_delay_ms(1);
   }
 }
