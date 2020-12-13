@@ -273,7 +273,7 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 			curr_state->substate.avoidance_distance += AVOID_DIST_INCR;
 			curr_state->substate.substate = STOPPED;
 		} else {
-			translation_control(curr_state, input_state, &output, 1);
+			translation_control(curr_state, input_state, 1, &(output.left_speed), &(output.right_speed));
 		}
 		break;
 	}
@@ -308,7 +308,7 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 			curr_state->substate.substate = ROTATING;
 		}
 		else {
-			translation_control(curr_state, input_state, &output, -1);
+			translation_control(curr_state, input_state, -1, &(output.left_speed), &(output.right_speed));
 		}
 		break;
 	}
@@ -345,7 +345,7 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 			curr_state->substate.next_state_turning = FORWARD;
 			curr_state->substate.substate = ROTATING;
 		} else {
-			translation_control(curr_state, input_state, &output, 1);
+			translation_control(curr_state, input_state, 1, &(output.left_speed), &(output.right_speed));
 		}
 		break;
 	}
@@ -357,7 +357,7 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 	return output;
 }
 
-void translation_control(system_state_t* curr_state, inputs_t input_state, outputs_t* output, int dir) {
+float* translation_control(system_state_t* curr_state, inputs_t input_state, int dir, int16_t* left_pwr, int16_t* right_pwr) {
   float diff_left = curr_state->distance_to_travel - curr_state->substate.total_distance_traveled_left;
   float diff_right = curr_state->distance_to_travel - curr_state->substate.total_distance_traveled_right;
   
@@ -376,7 +376,7 @@ void translation_control(system_state_t* curr_state, inputs_t input_state, outpu
 
   curr_state->substate.previous_left_encoder = input_state.left_encoder;
   curr_state->substate.previous_right_encoder = input_state.right_encoder;
-  output->left_speed = dir * sign_left * fmax(fabs(k_dist * diff_left - k_diff * wheel_diff), min_drive_speed);
-  output->right_speed = dir * sign_right * fmax(fabs(k_dist * diff_right + k_diff * wheel_diff), min_drive_speed);
+  *left_pwr = dir * sign_left * fmax(fabs(k_dist * diff_left - k_diff * wheel_diff), min_drive_speed);
+  *right_pwr = dir * sign_right * fmax(fabs(k_dist * diff_right + k_diff * wheel_diff), min_drive_speed);
 
 }
