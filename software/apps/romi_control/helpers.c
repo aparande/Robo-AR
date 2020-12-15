@@ -54,6 +54,10 @@ void ble_evt_connected(ble_evt_t const* p_ble_evt) {
 
 void ble_evt_disconnected(ble_evt_t const* p_ble_evt) {
     connected = false;
+    waypoint[0] = 0;
+    waypoint[1] = 0;
+    new_waypoint_written = false;
+    acknowledged = 0;
 }
 
 void ble_evt_write(ble_evt_t const* p_ble_evt) {

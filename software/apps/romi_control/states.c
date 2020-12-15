@@ -33,6 +33,7 @@ void transition_in(inputs_t input_state, system_state_t* curr_state) {
 			curr_state->position_y = 0;
 			curr_state->substate.previous_left_encoder = input_state.left_encoder;
 			curr_state->substate.previous_right_encoder = input_state.right_encoder;
+      curr_state->substate.target_forward_distance = curr_state->distance_to_travel;
 			break;
 		}
 		case END_TURNING: {
@@ -59,6 +60,7 @@ void transition_out(inputs_t input_state, system_state_t* curr_state, states old
 			break;
 		}
 		case DRIVING: {
+			stop_gyro_integration();
 			curr_state->substate = init_substate();
 			break;
 		}
@@ -98,7 +100,7 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 	        	printf("Waypoint Angle: %f\n", input_state.waypoint_angle);
 	        	curr_state->turn_angle = input_state.waypoint_angle;
 	        	curr_state->distance_to_travel = input_state.waypoint_distance;
-	            curr_state->state = TURNING;
+            curr_state->state = TURNING;
 	        } else {
 				output.left_speed = 0;
 				output.right_speed = 0;
@@ -130,13 +132,16 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
         	break;
       	}
       	case DRIVING: {
-	        float diff_x = curr_state->position_x - curr_state->distance_to_travel;
-			float diff_y = curr_state->position_y;
-			float dist = diff_x * diff_x + diff_y * diff_y;
+          float diff_left = curr_state->substate.target_forward_distance - curr_state->substate.total_distance_traveled_left;
+          float diff_right = curr_state->substate.target_forward_distance - curr_state->substate.total_distance_traveled_right;
+	        //float diff_x = curr_state->position_x - curr_state->distance_to_travel;
+			//float diff_y = curr_state->position_y;
+			//float dist = diff_x * diff_x + diff_y * diff_y;
+          float avg  = (diff_left + diff_right) / 2;
 
 	        if (input_state.button_pressed || !input_state.has_recently_connected) {
 	          	curr_state->state = OFF;
-	        } else if (dist < distance_threshold * distance_threshold) {
+	        } else if (curr_state->substate.substate == FORWARD && avg < distance_threshold) {
 	            curr_state->curr_orientation_angle = curr_state->curr_orientation_angle + curr_state->substate.relative_orientation_angle;
 				curr_state->turn_angle = -1 * curr_state->curr_orientation_angle;
 	            curr_state->state = END_TURNING;
@@ -349,8 +354,8 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 			break;
 		} else {
 
-			float diff_left = curr_state->distance_to_travel - curr_state->substate.total_distance_traveled_left;
-			float diff_right = curr_state->distance_to_travel - curr_state->substate.total_distance_traveled_right;
+			float diff_left = curr_state->substate.target_forward_distance - curr_state->substate.total_distance_traveled_left;
+			float diff_right = curr_state->substate.target_forward_distance - curr_state->substate.total_distance_traveled_right;
 			printf("Left Error%f\n", diff_left);
 			printf("Right Error%f\n", diff_right);
 			
@@ -407,8 +412,8 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 			break;
 		}
 		else {
-			float diff_left = curr_state->distance_to_travel - curr_state->substate.total_distance_traveled_left;
-			float diff_right = curr_state->distance_to_travel - curr_state->substate.total_distance_traveled_right;
+			float diff_left = BACKWARD_DIST - curr_state->substate.total_distance_traveled_left;
+			float diff_right = BACKWARD_DIST - curr_state->substate.total_distance_traveled_right;
 			printf("Left Error%f\n", diff_left);
 			printf("Right Error%f\n", diff_right);
 			
@@ -469,6 +474,9 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 		} else if(fabs(avg_diff) < distance_threshold){
 			
 			curr_state->substate.turn_angle_substate =  angle_modulo(atan2f(-curr_state->position_y, curr_state->distance_to_travel - curr_state->position_x) * 180 / M_PI - curr_state->curr_orientation_angle);
+      float xdiff = curr_state->distance_to_travel - curr_state->position_x;
+      float ydiff = curr_state->position_y;
+      curr_state->substate.target_forward_distance = sqrtf(xdiff * xdiff + ydiff * ydiff);
 			curr_state->substate.next_state_turning = FORWARD;
 			curr_state->substate.substate = ROTATING;
 		} else {
