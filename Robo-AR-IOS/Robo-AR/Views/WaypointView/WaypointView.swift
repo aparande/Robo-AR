@@ -17,6 +17,7 @@ class WaypointView: ARView {
     var robot: RoboWaypoint?
     var lastKnownLocation: RoboWaypoint?
     var lastCheckpoint: Checkpoint?
+    var didSetOrigin: Bool = false
     
     var waypoints: WaypointList = WaypointList()
 
@@ -26,6 +27,11 @@ class WaypointView: ARView {
     }
     
     @objc func handleTap(_ sender: UITapGestureRecognizer? = nil) {
+        if !didSetOrigin {
+            print("Locate robot first!")
+            return
+        }
+        
         guard let touchInView = sender?.location(in: self) else {
             return
         }
@@ -87,6 +93,11 @@ class WaypointView: ARView {
         
         self.scene.addAnchor(robotEntity)
         self.robot = roboBox
+        
+        if !didSetOrigin {
+            self.session.setWorldOrigin(relativeTransform: anchor.transform)
+            didSetOrigin = true
+        }
     
         self.lastCheckpoint = Checkpoint(reference: roboBox, orientation: 0.0)
     }
