@@ -31,6 +31,10 @@ int main(void) {
   error_code = nrf_twi_mngr_init(&twi_mngr_instance, &i2c_config);
   APP_ERROR_CHECK(error_code);
   lsm9ds1_init(&twi_mngr_instance);
+
+  // Make sure timer is properly reset on system reboot
+  lsm9ds1_start_gyro_integration();
+  lsm9ds1_stop_gyro_integration();
   printf("IMU initialized!\n");
 
   // initialize Kobuki

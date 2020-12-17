@@ -71,6 +71,7 @@ typedef struct driving_substate {
 	uint8_t stopping_timer;
 	bumps most_recent_bump;
 	float avoidance_distance;
+  float target_forward_distance;
 
 } driving_substate_t;
 
