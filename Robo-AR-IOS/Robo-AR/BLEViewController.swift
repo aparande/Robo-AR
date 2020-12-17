@@ -52,6 +52,12 @@ class BLEViewController: UIViewController {
     func compileNextInstruction(fromAck: Bool) -> Instruction? {
         preconditionFailure("Compile Next Instruction Not Implemented")
     }
+    
+    func onDisconnect() {
+        // Try to reconnect if disconnected
+        bleStatusView?.status = .connecting
+        centralManager.scanForPeripherals(withServices: nil)
+    }
 }
 
 extension BLEViewController: CBCentralManagerDelegate {
@@ -151,8 +157,8 @@ extension BLEViewController: CBPeripheralDelegate {
     }
     
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        bleStatusView?.status = .disconnected
         print("Romi Disconnected")
+        onDisconnect()
     }
 }
 

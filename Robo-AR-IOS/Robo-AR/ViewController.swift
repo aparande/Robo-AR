@@ -46,13 +46,22 @@ class ViewController: BLEViewController {
         }
     }
     
+    override func onDisconnect() {
+        super.onDisconnect()
+        
+        self.generateButton.isEnabled = true
+    }
+    
 
     override func compileNextInstruction(fromAck: Bool) -> Instruction? {
         if fromAck {
             setNextTarget()
         }
         
-        guard let waypoint = arView.currentWayPoint else { return nil }
+        guard let waypoint = arView.currentWayPoint else {
+            self.generateButton.isEnabled = true
+            return nil
+        }
  
         // If you have a checkpoint or know the robots location, then use it
         guard let trackedObject: TrackedObject = arView.robot ?? arView.lastCheckpoint else {
@@ -60,6 +69,7 @@ class ViewController: BLEViewController {
             alertView.addAction(UIAlertAction(title: "Ok", style: .cancel, handler: nil))
             self.present(alertView, animated: true, completion: nil)
             
+            self.generateButton.isEnabled = true
             return nil
         }
         
