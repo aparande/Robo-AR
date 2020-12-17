@@ -2,6 +2,10 @@
 import UIKit
 import RealityKit
 
+/**
+ Waypoint for the robot location.
+ Subclasses AR Point and implements the TrackedObject interface
+ */
 class RoboWaypoint: ARPoint, TrackedObject {
     required init(color: UIColor) {
         super.init(color: color, text: "Robot")
@@ -14,6 +18,7 @@ class RoboWaypoint: ARPoint, TrackedObject {
         fatalError("init() has not been implemented")
     }
             
+    // Add a sphere to the robot geometry to represent where forward is
     private func addSphere() {
         let mesh2 = MeshResource.generateSphere(radius: 1)
         let material = SimpleMaterial(color: .systemBlue, isMetallic: false)

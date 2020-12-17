@@ -11,34 +11,47 @@ import RealityKit
 import ARKit
 import CoreBluetooth
 
-
+/**
+ Main View Controller which takes user interactions from the view and makes decisions about what BLE commands to send
+ */
 class ViewController: BLEViewController {
+    // View references
     @IBOutlet var arView: WaypointView!
     @IBOutlet weak var generateButton: UIButton!
     
+    /**
+     System method called whenever the view is loaded for the first tim
+     */
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // Setup the AR View
         arView.addCoaching()
         arView.setupGestures()
         
+        // Configure image tracking
+        // Based on https://developer.apple.com/documentation/arkit/detecting_images_in_an_ar_experience
         guard let referenceImages = ARReferenceImage.referenceImages(inGroupNamed: "AR Resources", bundle: nil) else {
             fatalError("Missing expected asset catalog resources.")
         }
-        
         let config = ARWorldTrackingConfiguration()
         config.detectionImages = referenceImages
         config.maximumNumberOfTrackedImages = 1
         config.planeDetection = .horizontal
         
+        // Configure the AR Session
         arView.session.delegate = self
         arView.session.run(config, options: [.resetTracking, .removeExistingAnchors])
         arView.debugOptions.insert(.showSceneUnderstanding)
         arView.debugOptions.insert(.showWorldOrigin)
         
+        // Style the button
         generateButton.layer.cornerRadius = 20
     }
     
+    /**
+     Function triggered by the user pressing the button
+     */
     @IBAction func startTransmission(_ sender: Any) {
         if let inst = compileNextInstruction(fromAck: false) {
             self.generateButton.isEnabled = false
@@ -46,19 +59,28 @@ class ViewController: BLEViewController {
         }
     }
     
+    /**
+     Re-enable the transmit button on bluetooth disconnecting
+     */
     override func onDisconnect() {
         super.onDisconnect()
         
         self.generateButton.isEnabled = true
     }
     
-
+    /**
+     Compile the next instruction to send
+     */
     override func compileNextInstruction(fromAck: Bool) -> Instruction? {
+        /**
+         If we are compiling the instruction because an acknowledge characteristic, set our next target
+         */
         if fromAck {
             setNextTarget()
         }
         
         guard let waypoint = arView.currentWayPoint else {
+            // If there are no more waypoints, re-enable the transmit button
             self.generateButton.isEnabled = true
             return nil
         }
@@ -74,6 +96,7 @@ class ViewController: BLEViewController {
         }
         
         print("Using last known location from \(type(of: trackedObject))")
+        // Compile the instruction
         let inst = Instruction(distance: trackedObject.distanceTo(waypoint), angle: trackedObject.angleTo(waypoint), waypointNumber: waypoint.number)
         
         // We assume the robot will achieve the checkpoint when if is not being tracked
@@ -83,6 +106,9 @@ class ViewController: BLEViewController {
         return inst
     }
     
+    /**
+     Helper function which determines whether or not the robot has reached the waypoint (within 10 cm) and sets the target to be the next waypoint if it has
+     */
     private func setNextTarget() {
         guard let currentWaypoint = arView.currentWayPoint else { return }
         
@@ -100,6 +126,9 @@ class ViewController: BLEViewController {
     }
 }
 
+/**
+ Implementations of the AR Session Delegate for Image Tracking
+ */
 extension ViewController: ARSessionDelegate {
     
     func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
