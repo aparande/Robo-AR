@@ -35,7 +35,7 @@ will allow you to view print statements directly to the computer. Note the robot
 
 # Testing
 
-We have also included a Python script `robot_control.py` that can be used to send waypoints to the Romi. Before running this script, make sure that your computer has BLE capability and that you have the [Bluepy]{https://github.com/IanHarvey/bluepy} python package installed. To use the script, turn on your Romi and run
+We have also included a Python script `robot_control.py` that can be used to send waypoints to the Romi. Before running this script, make sure that your computer has BLE capability and that you have the [Bluepy](https://github.com/IanHarvey/bluepy) python package installed. To use the script, turn on your Romi and run
 
 > `sudo ./robot_control.py`
 
