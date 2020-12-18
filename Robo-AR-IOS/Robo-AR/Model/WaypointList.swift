@@ -8,7 +8,9 @@
 
 import Foundation
 
-// Linked List of Waypoints
+/**
+ Linked list of waypoints. Inherits sequence so we can use for-each syntax
+ */
 class WaypointList: Sequence {
     var head: Waypoint?
     var tail: Waypoint?
@@ -36,6 +38,10 @@ class WaypointList: Sequence {
     }
 }
 
+/**
+ Iterator which goes through a waypoint list.
+ Necessary to use for-each syntax
+ */
 struct WaypointIterator: IteratorProtocol {
     var current: Waypoint?
 

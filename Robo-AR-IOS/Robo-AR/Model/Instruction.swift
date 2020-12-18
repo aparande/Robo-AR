@@ -8,6 +8,9 @@
 
 import Foundation
 
+/**
+ Struct which can store an instruction
+ */
 struct Instruction {
     var distance: Float
     var angle: Float = 0

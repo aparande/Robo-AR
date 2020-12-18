@@ -8,25 +8,34 @@
 
 import UIKit
 
+// Enumeration for the states of the BLE Status View
 enum BLEStatus {
     case connected, connecting, transmitting
     case done
     case disconnected
 }
 
+/**
+ View to display information to the user about what BLE is doing
+ */
 class BLEStatusView: UIView {
+    // References to view components
     @IBOutlet weak var loadingIndicator: UIActivityIndicatorView!
     @IBOutlet weak var statusLabel: UILabel!
     @IBOutlet var contentView: UIView!
-    
     @IBOutlet weak var waypointLabel: UILabel!
     @IBOutlet weak var distLabel: UILabel!
     @IBOutlet weak var angleLabel: UILabel!
     
+    // Color final variables
     private let statusGreen = UIColor(red: 39.0 / 255, green: 174.0 / 255, blue: 96.0 / 255, alpha: 1.0)
     private let statusRed = UIColor(red: 192.0 / 255, green: 57.0 / 255, blue: 43.0 / 255, alpha: 1.0)
     private let statusYellow = UIColor(red: 241.0 / 255, green: 196.0 / 255, blue: 15.0 / 255, alpha: 1.0)
     
+    /**
+    The instruction that the BLE Status View can reference
+    Changes distance label, angle label, and waypoint label based on instruction data
+    */
     var instruction: Instruction? {
         didSet {
             if let inst = instruction {
@@ -41,6 +50,10 @@ class BLEStatusView: UIView {
         }
     }
     
+    /**
+     The BLE status.
+     Changes the status label text and view background color based on status
+     */
     var status: BLEStatus = .connecting {
         didSet {
             switch status {
@@ -90,6 +103,7 @@ class BLEStatusView: UIView {
         commonInit()
     }
 
+    // Load the view from the nib file
     private func commonInit() {
         Bundle.main.loadNibNamed("BLEStatusView", owner: self, options: nil)
         addSubview(contentView)

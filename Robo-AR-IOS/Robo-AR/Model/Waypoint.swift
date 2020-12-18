@@ -1,8 +1,14 @@
 import UIKit
 import RealityKit
 
+/**
+ Waypoint Class. Is an instance of a more general AR Point
+ */
 class Waypoint: ARPoint {
+    // The waypoint number
     let number: Int
+    
+    // A link to the next waypoint (since these are also nodes in a Waypoint list)
     var next: Waypoint? {
         didSet {
             // Construct the line from this waypoint to the next
@@ -12,11 +18,13 @@ class Waypoint: ARPoint {
         }
     }
     
+    // A link to the previous waypoint
     var prev: Waypoint?
     
+    // Is this waypoint the last in the waypoint list?
     var isTerminal: Bool {
         get {
-            return prev == nil
+            return next == nil
         }
     }
     
