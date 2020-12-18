@@ -1,9 +1,12 @@
 #include "states.h"
+
 NRF_TWI_MNGR_DEF(twi_mngr_instance, 5, 0);
 
 
 int main(void) {
   setup();
+
+  // For some reason, cannot put this inside the setup function
 
   // initialize display
   nrf_drv_spi_t spi_instance = NRF_DRV_SPI_INSTANCE(1);
@@ -41,6 +44,7 @@ int main(void) {
   kobukiInit();
   printf("Kobuki initialized!\n");
 
+  // Main Loop
   system_state_t system_state = init_state();
   while(true) {
     inputs_t inputs = get_inputs();

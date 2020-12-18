@@ -26,13 +26,8 @@ simple_ble_service_t robot_service = {{
                 0x59,0x4D,0x5e,0xf6,0xa0,0xed,0x07,0x46}
 }};
 
-//Declare characteristics and variables for your service
-simple_ble_char_t waypoint_char = {.uuid16 = 0xeda1};
-simple_ble_char_t ack_char = {.uuid16 = 0xeda2};
-simple_ble_app_t* simple_ble_app;
 
-
-
+// Constants for use in FSM
 const float CONVERSION = 0.0006108;
 const float angle_threshold = .5;
 const float distance_threshold = .02;
@@ -42,16 +37,24 @@ uint16_t min_angle_speed = 50;
 uint16_t min_drive_speed = 80;
 
 
+// Bluetooth Variables and Functions
 float waypoint[2] = {0, 0};
 bool new_waypoint_written = false;
 int acknowledged = 0;
 bool connected = false;
 
+//Declare characteristics and variables for your service
+simple_ble_char_t waypoint_char = {.uuid16 = 0xeda1};
+simple_ble_char_t ack_char = {.uuid16 = 0xeda2};
+simple_ble_app_t* simple_ble_app;
 
+
+// called upon Connect
 void ble_evt_connected(ble_evt_t const* p_ble_evt) {
     connected = true;
 }
 
+// called upon disconnect
 void ble_evt_disconnected(ble_evt_t const* p_ble_evt) {
     connected = false;
     waypoint[0] = 0;
@@ -60,6 +63,8 @@ void ble_evt_disconnected(ble_evt_t const* p_ble_evt) {
     acknowledged = 0;
 }
 
+
+// called upon a write
 void ble_evt_write(ble_evt_t const* p_ble_evt) {
     //logic for each characteristic and related state changes
     //Try not to modify the state here...
@@ -68,6 +73,8 @@ void ble_evt_write(ble_evt_t const* p_ble_evt) {
 	printf("Angle: %f\n", waypoint[1]);
     new_waypoint_written = true;
 }
+
+// Runs major setup code for the main loop. Sets up Bluetooth and LEDs
 
 void setup() {
   // initialize RTT library
@@ -103,6 +110,10 @@ void setup() {
   nrf_gpio_pin_set(25);
 }
 
+
+// Util Functions
+
+// Measures the distance traveled between two encoder ticks.
 float measure_distance(uint16_t current_encoder, uint16_t previous_encoder) {
   float distance = 0;
   if (current_encoder < previous_encoder) {
@@ -128,6 +139,8 @@ float measure_distance(uint16_t current_encoder, uint16_t previous_encoder) {
   return val;
 }
 
+
+// Changes an angle to be within -180 and 180 degrees. 
 float angle_modulo(float possible_angle){
 
   if(possible_angle > 0){

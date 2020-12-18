@@ -37,19 +37,19 @@
 
 
 typedef enum {
-    OFF=0,
-    WAITING=1,
-    TURNING=2,
-    DRIVING=3,
-    END_TURNING=4,
+    OFF=0, // Phone is disconnected from the Robot
+    WAITING=1, // Robot is waiting for a waypoint
+    TURNING=2, // Robot is turning before driving
+    DRIVING=3, // Robot is driving with obstacle avoidance
+    END_TURNING=4, // Robot is turning back to its original position
 } states;
 
 typedef enum {
-	FORWARD=0,
-	STOPPED=1,
-	BACKWARD=2,
-	ROTATING=3,
-	AVOIDANCE=4,
+	FORWARD=0, // Robot is driving forward
+	STOPPED=1, // Robot has hit an obstacle
+	BACKWARD=2, // Robot is moving backward to avoid obstacle
+	ROTATING=3, // Robot is rotating to avoid the obstacle
+	AVOIDANCE=4, // Robot is driving away from the obstacle
 } substates;
 
 
@@ -59,6 +59,7 @@ typedef enum {
 	RIGHT_BUMP=2
 } bumps;
 
+// Variables that describe teh state of the robot during its driving
 typedef struct driving_substate {
 	substates substate;
 	uint16_t previous_left_encoder;
@@ -75,13 +76,12 @@ typedef struct driving_substate {
 
 } driving_substate_t;
 
+// Variables that describe the state of the overall Robot. 
 typedef struct system_state {
 	states state;
 	driving_substate_t substate;
 	float position_x;
 	float position_y;
-	// float curr_waypoint_distance;
-	// float curr_waypoint_angle;
 	float curr_orientation_angle;
 	float turn_angle;
 	float distance_to_travel;
@@ -90,19 +90,35 @@ typedef struct system_state {
 
 
 
-
-void transition_in(inputs_t input_state, system_state_t* curr_state);
-void transition_out(inputs_t input_state, system_state_t* curr_state, states old_state);
-
-void substate_transition_in(inputs_t input_state, driving_substate_t* curr_state);
-void substate_transition_out(inputs_t input_state, driving_substate_t* curr_state, substates old_state);
-
-void print_state(system_state_t current_state, char* display_line_0, char* display_line_1);
-void print_substate(system_state_t current_state, char* display_line0, char* display_line_1);
-
+// Transition Functions
 outputs_t transition(inputs_t input_state, system_state_t* curr_state);
 outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state);
 
+
+// Transition Function Helpers
+
+// Function is called whenever a transition from one state to another happens in the main FSM
+// It deals with any startup behavior involved in transitioning INTO a given state
+void transition_in(inputs_t input_state, system_state_t* curr_state); 
+
+// Function is called whenever a transition from one state to another happens in the main FSM
+// Deals with any cleanup behavior involved in transitioning OUT OF a state
+void transition_out(inputs_t input_state, system_state_t* curr_state, states old_state); //
+
+// Function is called whenever a transition from one state to another happens in the child FSM
+// It deals with any startup behavior involved in transitioning INTO a given state
+void substate_transition_in(inputs_t input_state, driving_substate_t* curr_state);
+
+// Function is called whenever a transition from one state to another happens in the child FSM
+// Deals with any cleanup behavior involved in transitioning OUT OF a state
+void substate_transition_out(inputs_t input_state, driving_substate_t* curr_state, substates old_state);
+
+// Printing Functions. Determines what is written on the display. 
+void print_state(system_state_t current_state, char* display_line_0, char* display_line_1);
+void print_substate(system_state_t current_state, char* display_line0, char* display_line_1);
+
+
+// State Initializers
 system_state_t init_state();
 driving_substate_t init_substate();
 

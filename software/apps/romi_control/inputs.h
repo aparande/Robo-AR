@@ -31,6 +31,8 @@
 
 #include "helpers.h"
 
+
+// Input Struct
 typedef struct inputs {
 	float waypoint_distance;
 	float waypoint_angle; // in degrees
@@ -46,8 +48,10 @@ typedef struct inputs {
 } inputs_t;
 
 
+// Reads all sensors and aggregates any external data into a single struct
 inputs_t get_inputs();
 
+// Starts and stops the gyroscope integration
 void stop_gyro_integration();
 void start_gyro_integration();
 
