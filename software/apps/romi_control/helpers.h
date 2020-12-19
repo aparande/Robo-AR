@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-
 #include "app_error.h"
 #include "app_timer.h"
 #include "nrf.h"
@@ -31,7 +30,6 @@
 
 
 // Global Variables 
-
 KobukiSensors_t sensors;
 ret_code_t error_code;
 bool is_gyro_integrating;

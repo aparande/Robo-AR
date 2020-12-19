@@ -29,6 +29,7 @@
 
 #include "helpers.h"
 
+//defines output data, such as BLE ack, motor values, and LED Display strings
 typedef struct outputs {
 	bool notify_ack;
 	int notify_val;

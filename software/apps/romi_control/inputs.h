@@ -34,7 +34,7 @@
 
 // Input Struct
 typedef struct inputs {
-	float waypoint_distance;
+	float waypoint_distance; // in meters
 	float waypoint_angle; // in degrees
 	uint16_t right_encoder;
 	uint16_t left_encoder;
@@ -51,7 +51,7 @@ typedef struct inputs {
 // Reads all sensors and aggregates any external data into a single struct
 inputs_t get_inputs();
 
-// Starts and stops the gyroscope integration
+// Wrappers that start and stop the gyroscope integration
 void stop_gyro_integration();
 void start_gyro_integration();
 

@@ -7,7 +7,6 @@ int main(void) {
   setup();
 
   // For some reason, cannot put this inside the setup function
-
   // initialize display
   nrf_drv_spi_t spi_instance = NRF_DRV_SPI_INSTANCE(1);
   nrf_drv_spi_config_t spi_config = {
@@ -26,7 +25,7 @@ int main(void) {
   display_init(&spi_instance);
   printf("Display initialized!\n");
 
-    // initialize i2c master (two wire interface)
+  // initialize i2c master (two wire interface)
   nrf_drv_twi_config_t i2c_config = NRF_DRV_TWI_DEFAULT_CONFIG;
   i2c_config.scl = BUCKLER_SENSORS_SCL;
   i2c_config.sda = BUCKLER_SENSORS_SDA;

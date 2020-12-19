@@ -58,7 +58,6 @@ void driving_controls(float target_distance, inputs_t input_state, system_state_
 	output->right_speed = sign_right * right_magnitude;
 }
 
-
 system_state_t init_state() {
 	system_state_t ret_system = {0};
 	ret_system.acknowledged_val = 0;
@@ -78,6 +77,7 @@ void transition_in(inputs_t input_state, system_state_t* curr_state) {
 			curr_state->state = WAITING;
 			break;
 		}
+		case END_TURNING:
 		case TURNING: {
 			curr_state->curr_orientation_angle = 0;
 			stop_gyro_integration();
@@ -85,8 +85,7 @@ void transition_in(inputs_t input_state, system_state_t* curr_state) {
 			break;
 		}
 		case DRIVING: {
-
-			// Initializes the hierarchical state machine. Localizing itself at 0.
+			// Initializes the hierarchical state machine, localizing self at 0.
 			curr_state->substate = init_substate();
 			curr_state->curr_orientation_angle = 0;
 			curr_state->position_x = 0;
@@ -96,23 +95,12 @@ void transition_in(inputs_t input_state, system_state_t* curr_state) {
       		curr_state->substate.target_forward_distance = curr_state->distance_to_travel;
 			break;
 		}
-		case END_TURNING: {
-			curr_state->curr_orientation_angle = 0;
-			stop_gyro_integration();
-			start_gyro_integration();
-			break;
-		}
 	}
 }
 
 void transition_out(inputs_t input_state, system_state_t* curr_state, states old_state) {
 	switch(old_state) {
-		case OFF: {
-			break;
-		}
-		case WAITING: {
-			break;
-		}
+		case END_TURNING:
 		case TURNING: {
 			stop_gyro_integration();
 			curr_state->turn_angle = 0;
@@ -125,10 +113,7 @@ void transition_out(inputs_t input_state, system_state_t* curr_state, states old
 			curr_state->substate = init_substate();
 			break;
 		}
-		case END_TURNING: {
-			stop_gyro_integration();
-			curr_state->turn_angle = 0;
-			curr_state->curr_orientation_angle = 0;
+		default: {
 			break;
 		}
 	}
@@ -145,13 +130,12 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 				// Go to WAITING after connecting
 
           		curr_state->state = WAITING;
-				break;
         	} else {
           		output.left_speed = 0;
           		output.right_speed = 0;
           		curr_state->state = OFF;
-				break;
         	}
+			break;
 		}
 		case WAITING: {
 			// Robot is connected and waiting for command
@@ -165,7 +149,7 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 	        	output.notify_ack = true;
 	        	curr_state->turn_angle = input_state.waypoint_angle;
 	        	curr_state->distance_to_travel = input_state.waypoint_distance;
-            curr_state->state = TURNING;
+            	curr_state->state = TURNING;
 	        } else {
 				output.left_speed = 0;
 				output.right_speed = 0;
@@ -203,7 +187,7 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 	        if (input_state.button_pressed || !input_state.has_recently_connected) {
 	          	curr_state->state = OFF;
 	        } else if (curr_state->substate.substate == FORWARD && avg < DISTANCE_THRESHOLD) {
-				// The robot is now ready to reorient itself
+				// Upon reaching the waypoint, the robot will now reorient itself
 
 	            curr_state->curr_orientation_angle = curr_state->curr_orientation_angle + curr_state->substate.relative_orientation_angle;
 				curr_state->turn_angle = -1 * curr_state->curr_orientation_angle;
@@ -239,9 +223,6 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 			}
 			break;
 		}
-     	default: {
-     		break;
-     	}
 	}
 	output.notify_val  = curr_state->acknowledged_val;
 	// if there was a transition, run transition in and out functions
@@ -306,6 +287,7 @@ void print_state(system_state_t current_state, char* display_line_0, char* displ
 	        snprintf(display_line_1, 16, "");
 			break;
 	    }
+		case END_TURNING:
 		case TURNING: {
 	        snprintf(display_line_0, 16, "TURN TARGET: %f", current_state.turn_angle);
 	        snprintf(display_line_1, 16, "ANGLE CUR: %f", current_state.curr_orientation_angle);
@@ -313,11 +295,6 @@ void print_state(system_state_t current_state, char* display_line_0, char* displ
 	    }
 		case DRIVING: {
 			print_substate(current_state, display_line_0, display_line_1);
-			break;
-	    }
-	    case END_TURNING: {
-	        snprintf(display_line_0, 16, "TURN TARGET: %f", current_state.turn_angle);
-	        snprintf(display_line_1, 16, "ANGLE CUR: %f", current_state.curr_orientation_angle);
 			break;
 	    }
 	}
@@ -332,14 +309,9 @@ driving_substate_t init_substate() {
 void substate_transition_in(inputs_t input_state, driving_substate_t* curr_state){
 
 	switch(curr_state->substate) {
+		case AVOIDANCE:
+		case BACKWARD:
 		case FORWARD: {
-			curr_state->previous_left_encoder = input_state.left_encoder;
-			curr_state->previous_right_encoder = input_state.right_encoder;
-			curr_state->total_distance_traveled_left = 0;
-			curr_state->total_distance_traveled_right = 0;
-			break;
-		}
-		case BACKWARD: {
 			curr_state->previous_left_encoder = input_state.left_encoder;
 			curr_state->previous_right_encoder = input_state.right_encoder;
 			curr_state->total_distance_traveled_left = 0;
@@ -356,14 +328,6 @@ void substate_transition_in(inputs_t input_state, driving_substate_t* curr_state
 			curr_state->relative_orientation_angle = 0;
 			break;
 		}
-		case AVOIDANCE: {
-
-			curr_state->previous_left_encoder = input_state.left_encoder;
-			curr_state->previous_right_encoder = input_state.right_encoder;
-			curr_state->total_distance_traveled_left = 0;
-			curr_state->total_distance_traveled_right = 0;
-			break;
-		}
 	}
 
 }
@@ -371,12 +335,9 @@ void substate_transition_in(inputs_t input_state, driving_substate_t* curr_state
 void substate_transition_out(inputs_t input_state, driving_substate_t* curr_state, substates old_state){
 
 	switch(old_state) {
+		case AVOIDANCE:
+		case BACKWARD:
 		case FORWARD: {
-			curr_state->total_distance_traveled_left = 0;
-			curr_state->total_distance_traveled_right = 0;
-			break;
-		}
-		case BACKWARD: {
 			curr_state->total_distance_traveled_left = 0;
 			curr_state->total_distance_traveled_right = 0;
 			break;
@@ -391,10 +352,6 @@ void substate_transition_out(inputs_t input_state, driving_substate_t* curr_stat
 			curr_state->relative_orientation_angle = 0;
 			break;
 		}
-		case AVOIDANCE: {
-			curr_state->total_distance_traveled_left = 0;
-			curr_state->total_distance_traveled_right = 0;
-			break;		}
 	}
 
 }
@@ -414,26 +371,24 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 			curr_state->substate.most_recent_bump = input_state.bump_left ? LEFT_BUMP : RIGHT_BUMP;
 			curr_state->substate.avoidance_distance += AVOID_DIST_INCR;
 			curr_state->substate.substate = STOPPED;
-			break;
 		} else {
 			// Have the robot drive forward the correct distance to the target
 
 			driving_controls(curr_state->substate.target_forward_distance, input_state, curr_state, &output);
 			curr_state->substate.substate = FORWARD;
-			break;
 		}
+		break;
 	}
 	case STOPPED: {
 		if(curr_state->substate.stopping_timer > TIME_MAX){
 			curr_state->substate.substate = BACKWARD;
-			break;
 		}
 		else {
 			curr_state->substate.stopping_timer += 1;
 			output.left_speed = 0;
 			output.right_speed = 0;
-			break;
 		}
+		break;
 	}
 	case BACKWARD: {
 		// Controls for driving backwards
@@ -457,15 +412,14 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 			}
 			curr_state->substate.next_state_turning = AVOIDANCE;
 			curr_state->substate.substate = ROTATING;
-			break;
 		}
 		else {
 			// Have the robot drive backward away from an obstacle
 
 			driving_controls(BACKWARD_DIST, input_state, curr_state, &output);
 			curr_state->substate.substate = BACKWARD;
-			break;
 		}
+		break;
 	}
 	case ROTATING: {
 		// Controls for turning toward waypoint
@@ -475,15 +429,14 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 		if (fabs(diff) < ANGLE_THRESHOLD) {
 			curr_state->curr_orientation_angle = angle_modulo(curr_state->curr_orientation_angle + curr_state->substate.relative_orientation_angle);
 			curr_state->substate.substate = curr_state->substate.next_state_turning;
-			break;
 		}
 		else {
 			// Have the robot orient toward the waypoint
 
 			turning_controls(curr_state->substate.turn_angle_substate, input_state, curr_state, &output);
 			curr_state->substate.substate = ROTATING;
-			break;
 		}
+		break;
 	}
 	case AVOIDANCE: {
 		// Controls for driving forward away from the obstacle
@@ -497,7 +450,6 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 
 			curr_state->substate.most_recent_bump = input_state.bump_left ? LEFT_BUMP : RIGHT_BUMP;
 			curr_state->substate.substate = STOPPED;
-			break;
 		} else if(fabs(avg_diff) < DISTANCE_THRESHOLD){
 			// Re-compute target angles and distances now that we are around the obstacle
 			
@@ -516,8 +468,8 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 
 			driving_controls(curr_state->substate.avoidance_distance, input_state, curr_state, &output);
 			curr_state->substate.substate = AVOIDANCE;
-			break;
 		}
+		break;
 	}
 	default:
 		break;
