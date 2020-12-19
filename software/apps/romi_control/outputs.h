@@ -42,6 +42,4 @@ typedef struct outputs {
 // Takes in all output data from the FSM and sends it to sensors to get done. 
 void do_outputs(outputs_t output);
 
-
-
 #endif /* OUTPUTS_H_ */

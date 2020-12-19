@@ -1,5 +1,63 @@
 #include "states.h"
 
+void turning_controls(float target_angle, inputs_t input_state, system_state_t* curr_state, outputs_t* output) {
+	// Compute motor inputs for robot to turn a target angle (degrees)
+
+	// Update current orientation
+	curr_state->substate.relative_orientation_angle = input_state.gyro_integration_z_value; 
+
+	// Compute angle error
+	float diff = angle_modulo(target_angle - curr_state->substate.relative_orientation_angle);
+
+	// Calculate sign and magntidue of motor input
+	int8_t sign = (2 * (diff > 0)) - 1;
+	float magnitude = fmax(K_TURN * fabs(diff), MIN_ANGLE_SPEED);
+
+	// Set motor inputs for both wheels
+	int16_t speed = sign * magnitude;
+	output->left_speed = -speed;
+	output->right_speed = speed;
+	curr_state->substate.substate = ROTATING;
+}
+
+void driving_controls(float target_distance, inputs_t input_state, system_state_t* curr_state, outputs_t* output) {
+	// Compute motor inputs for robot drive a target distance (meters)
+
+	// Compute distance error on both wheels
+	float diff_left = target_distance - curr_state->substate.total_distance_traveled_left;
+	float diff_right = target_distance - curr_state->substate.total_distance_traveled_right;
+	
+	// Compute distance mismatch between wheels
+	float wheel_diff = diff_right - diff_left;
+
+	// Update distance traveled by both wheels
+	float dist_traveled_left = measure_distance(input_state.left_encoder, curr_state->substate.previous_left_encoder);
+	float dist_traveled_right = measure_distance(input_state.right_encoder, curr_state->substate.previous_right_encoder);
+	curr_state->substate.total_distance_traveled_left += dist_traveled_left;
+	curr_state->substate.total_distance_traveled_right += dist_traveled_right;
+
+	// Update encoder values for next distance calculation
+	curr_state->substate.previous_left_encoder = input_state.left_encoder;
+	curr_state->substate.previous_right_encoder = input_state.right_encoder;
+
+	// Update distance traveled by car
+	float avg_dist = (dist_traveled_right + dist_traveled_left) / 2;
+	curr_state->position_x += cosf(curr_state->curr_orientation_angle * M_PI / 180) * avg_dist;
+	curr_state->position_y += sinf(curr_state->curr_orientation_angle * M_PI / 180) * avg_dist;
+
+	// Calculate appropriate sign of motor input for both wheels
+	int8_t sign_left = (2 * (diff_left > 0)) - 1;
+	int8_t sign_right = (2 * (diff_right > 0)) - 1;
+
+	// Calculate magnitude of motor input for both wheels
+	float left_magnitude = fmax(fabs(K_DIST * diff_left - K_DIFF * wheel_diff), MIN_DRIVE_SPEED);
+	float right_magnitude = fmax(fabs(K_DIST * diff_right + K_DIFF * wheel_diff), MIN_DRIVE_SPEED);
+
+	// Set motor inputs for both wheels
+	output->left_speed = sign_left * left_magnitude;
+	output->right_speed = sign_right * right_magnitude;
+}
+
 
 system_state_t init_state() {
 	system_state_t ret_system = {0};
@@ -81,7 +139,11 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 	states old_state = curr_state->state;
 	switch(curr_state->state) {
 		case OFF: {
+			// Robot is disconnected
+
 			if (input_state.has_recently_connected) {
+				// Go to WAITING after connecting
+
           		curr_state->state = WAITING;
 				break;
         	} else {
@@ -92,9 +154,13 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
         	}
 		}
 		case WAITING: {
+			// Robot is connected and waiting for command
+
 	        if (input_state.button_pressed || !input_state.has_recently_connected) {
 	          	curr_state->state = OFF;
 	        } else if (input_state.new_waypoint_written) {
+				// Transition after recieving waypoint
+
 	        	curr_state->acknowledged_val = 1;
 	        	output.notify_ack = true;
 	        	curr_state->turn_angle = input_state.waypoint_angle;
@@ -108,57 +174,67 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 	        break;
 	    }
       	case TURNING: {
-      		curr_state->curr_orientation_angle = input_state.gyro_integration_z_value; 
+			// Turn to face waypoint  
+
+			// Compute angle error  
 	        float diff = angle_modulo(curr_state->turn_angle - curr_state->curr_orientation_angle);
 	        if (input_state.button_pressed || !input_state.has_recently_connected) {
 	          	curr_state->state = OFF;
-	        } else if (fabs(diff) < angle_threshold) {
+	        } else if (fabs(diff) < ANGLE_THRESHOLD) {
+				// After orienting toward waypiont, drive to waypoint
+
 	            curr_state->state = DRIVING;
 	        }
 	        else {
-	          	int8_t sign = (2 * (diff > 0)) - 1;
-	          	int16_t speed = sign * fmax(.8 * fabs(diff), min_angle_speed);
-				output.left_speed = -speed;
-				output.right_speed = speed;
+				// Have robot turn toward waypoint
+
+				turning_controls(curr_state->turn_angle, input_state, curr_state, &output);
 	          	curr_state->state = TURNING;
 	    	}
         	break;
       	}
       	case DRIVING: {
-          float diff_left = curr_state->substate.target_forward_distance - curr_state->substate.total_distance_traveled_left;
-          float diff_right = curr_state->substate.target_forward_distance - curr_state->substate.total_distance_traveled_right;
-          float avg  = (diff_left + diff_right) / 2;
+			// Drive toward target avoid obstacles
 
+			// Compute distance errror
+			float diff_left = curr_state->substate.target_forward_distance - curr_state->substate.total_distance_traveled_left;
+			float diff_right = curr_state->substate.target_forward_distance - curr_state->substate.total_distance_traveled_right;
+			float avg  = (diff_left + diff_right) / 2;
 	        if (input_state.button_pressed || !input_state.has_recently_connected) {
 	          	curr_state->state = OFF;
-	        } else if (curr_state->substate.substate == FORWARD && avg < distance_threshold) {
+	        } else if (curr_state->substate.substate == FORWARD && avg < DISTANCE_THRESHOLD) {
+				// The robot is now ready to reorient itself
+
 	            curr_state->curr_orientation_angle = curr_state->curr_orientation_angle + curr_state->substate.relative_orientation_angle;
 				curr_state->turn_angle = -1 * curr_state->curr_orientation_angle;
 	            curr_state->state = END_TURNING;
 	        } else {
-			  outputs_t output_substate = substate_transition(input_state, curr_state);
-	          output.left_speed = output_substate.left_speed;
-	          output.right_speed = output_substate.right_speed;
-	          curr_state->state = DRIVING;
+				// Handle substate transitions
+				
+				outputs_t output_substate = substate_transition(input_state, curr_state);
+				output.left_speed = output_substate.left_speed;
+				output.right_speed = output_substate.right_speed;
+				curr_state->state = DRIVING;
 	        }
         	break;
      	}
 		case END_TURNING: {
+			// Controls for final angle correction
 
-			curr_state->curr_orientation_angle = input_state.gyro_integration_z_value; 
 	        float diff = angle_modulo(curr_state->turn_angle - curr_state->curr_orientation_angle);
 
 			if (input_state.button_pressed || !input_state.has_recently_connected) {
 	          	curr_state->state = OFF;
-			} else if (fabs(diff) < angle_threshold) {
+			} else if (fabs(diff) < ANGLE_THRESHOLD) {
+				// Tell the phone we are ready for another command
+
 	        	output.notify_ack = true;
 	            curr_state->acknowledged_val = 0;
 	            curr_state->state = WAITING;
 	        } else {
-				int8_t sign = (2 * (diff > 0)) - 1;
-	          	int16_t speed = sign * fmax(.8 * fabs(diff), min_angle_speed);
-				output.left_speed = -speed;
-				output.right_speed = speed;
+				// Have the robot turn towards inital heading
+
+				turning_controls(curr_state->turn_angle, input_state, curr_state, &output);
 	          	curr_state->state = END_TURNING;
 			}
 			break;
@@ -323,64 +399,6 @@ void substate_transition_out(inputs_t input_state, driving_substate_t* curr_stat
 
 }
 
-void turning_controls(float target_angle, inputs_t input_state, system_state_t* curr_state, outputs_t* output) {
-	// Compute motor inputs for robot to turn a target angle (degrees)
-
-	// Update current orientation
-	curr_state->substate.relative_orientation_angle = input_state.gyro_integration_z_value; 
-
-	// Compute angle error
-	float diff = angle_modulo(target_angle - curr_state->substate.relative_orientation_angle);
-
-	// Calculate sign and magntidue of motor input
-	int8_t sign = (2 * (diff > 0)) - 1;
-	float magnitude = sign * fmax(.8 * fabs(diff), min_angle_speed);
-
-	// Set motor inputs for both wheels
-	int16_t speed = sign * fmax(.8 * fabs(diff), min_angle_speed);
-	output->left_speed = -speed;
-	output->right_speed = speed;
-	curr_state->substate.substate = ROTATING;
-}
-
-void driving_controls(float target_distance, inputs_t input_state, system_state_t* curr_state, outputs_t* output) {
-	// Compute motor inputs for robot drive a target distance (meters)
-
-	// Compute distance error on both wheels
-	float diff_left = target_distance - curr_state->substate.total_distance_traveled_left;
-	float diff_right = target_distance - curr_state->substate.total_distance_traveled_right;
-	
-	// Compute distance mismatch between wheels
-	float wheel_diff = diff_right - diff_left;
-
-	// Update distance traveled by both wheels
-	float dist_traveled_left = measure_distance(input_state.left_encoder, curr_state->substate.previous_left_encoder);
-	float dist_traveled_right = measure_distance(input_state.right_encoder, curr_state->substate.previous_right_encoder);
-	curr_state->substate.total_distance_traveled_left += dist_traveled_left;
-	curr_state->substate.total_distance_traveled_right += dist_traveled_right;
-
-	// Update encoder values for next distance calculation
-	curr_state->substate.previous_left_encoder = input_state.left_encoder;
-	curr_state->substate.previous_right_encoder = input_state.right_encoder;
-
-	// Update distance traveled by car
-	float avg_dist = (dist_traveled_right + dist_traveled_left) / 2;
-	curr_state->position_x += cosf(curr_state->curr_orientation_angle * M_PI / 180) * avg_dist;
-	curr_state->position_y += sinf(curr_state->curr_orientation_angle * M_PI / 180) * avg_dist;
-
-	// Calculate appropriate sign of motor input for both wheels
-	int8_t sign_left = (2 * (diff_left > 0)) - 1;
-	int8_t sign_right = (2 * (diff_right > 0)) - 1;
-
-	// Calculate magnitude of motor input for both wheels
-	float left_magnitude = fmax(fabs(k_dist * diff_left - k_diff * wheel_diff), min_drive_speed);
-	float right_magnitude = fmax(fabs(k_dist * diff_right + k_diff * wheel_diff), min_drive_speed);
-
-	// Set motor inputs for both wheels
-	output->left_speed = sign_left * left_magnitude;
-	output->right_speed = sign_right * right_magnitude;
-}
-
 outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 
 	outputs_t output = {0};
@@ -424,14 +442,14 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 		float diff_left = curr_state->substate.avoidance_distance - curr_state->substate.total_distance_traveled_left;
 		float diff_right = curr_state->substate.avoidance_distance - curr_state->substate.total_distance_traveled_right;
 		float avg_diff = (diff_left + diff_right) / 2;
-		if(fabs(avg_diff) < distance_threshold){
+		if(fabs(avg_diff) < DISTANCE_THRESHOLD){
 			// After reversing far enough, determine which direction to turn given our most recent bump
 
 			if(curr_state->substate.most_recent_bump == LEFT_BUMP){
-				curr_state->substate.turn_angle_substate = -45;
+				curr_state->substate.turn_angle_substate = -AVOID_ANGLE;
 			}
 			else if(curr_state->substate.most_recent_bump == RIGHT_BUMP){
-				curr_state->substate.turn_angle_substate = 45;
+				curr_state->substate.turn_angle_substate = AVOID_ANGLE;
 			}
 			else {
 				// should never happen; center bump is handeled in RIGHT_BUMP case
@@ -454,7 +472,7 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 
 		// Compute our angle error
 	    float diff = angle_modulo(curr_state->substate.turn_angle_substate - curr_state->substate.relative_orientation_angle);
-		if (fabs(diff) < angle_threshold) {
+		if (fabs(diff) < ANGLE_THRESHOLD) {
 			curr_state->curr_orientation_angle = angle_modulo(curr_state->curr_orientation_angle + curr_state->substate.relative_orientation_angle);
 			curr_state->substate.substate = curr_state->substate.next_state_turning;
 			break;
@@ -480,7 +498,7 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 			curr_state->substate.most_recent_bump = input_state.bump_left ? LEFT_BUMP : RIGHT_BUMP;
 			curr_state->substate.substate = STOPPED;
 			break;
-		} else if(fabs(avg_diff) < distance_threshold){
+		} else if(fabs(avg_diff) < DISTANCE_THRESHOLD){
 			// Re-compute target angles and distances now that we are around the obstacle
 			
 			// Compute error to target

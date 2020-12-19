@@ -27,6 +27,8 @@
 #include "lsm9ds1.h"
 #include "simple_ble.h"
 
+#define CONVERSION 0.0006108
+
 
 // Global Variables 
 
@@ -48,17 +50,7 @@ simple_ble_char_t waypoint_char;
 simple_ble_char_t ack_char;
 simple_ble_app_t* simple_ble_app;
 
-
-// Global Constants
-const float CONVERSION;
-const float angle_threshold;
-const float distance_threshold;
-
-int k_dist;
-int k_diff;
-uint16_t min_angle_speed;
-uint16_t min_drive_speed;
-
+//BLE global variables
 float waypoint[2];
 bool new_waypoint_written;
 int acknowledged;
@@ -72,7 +64,6 @@ float measure_distance(uint16_t current_encoder, uint16_t previous_encoder);
 
 // Modulo function that takes any givne float and places the float between -180 and 180 degrees. 
 float angle_modulo(float possible_angle);
-
 
 // Setup Functions
 void setup();

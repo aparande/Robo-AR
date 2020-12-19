@@ -11,7 +11,7 @@ bool is_gyro_integrating = false;
 
 // Intervals for advertising and connections
 simple_ble_config_t ble_config = {
-        // c0:98:e5:49:xx:xx
+        // MAC address of form c0:98:e5:49:xx:xx, XX:XX is platform_Iid
         .platform_id       = 0x46,    // used as 4th octect in device BLE address
         .device_id         = 0xEEC5, 
         .adv_name          = "Robo-AR", // used in advertisements if there is room
@@ -20,22 +20,11 @@ simple_ble_config_t ble_config = {
         .max_conn_interval = MSEC_TO_UNITS(200, UNIT_1_25_MS),
 };
 
-//4607eda0-f65e-4d59-a9ff-84420d87a4ca
+// Initalize BLE service
 simple_ble_service_t robot_service = {{
     .uuid128 = {0xca,0xa4,0x87,0x0d,0x42,0x84,0xff,0xA9,
                 0x59,0x4D,0x5e,0xf6,0xa0,0xed,0x07,0x46}
 }};
-
-
-// Constants for use in FSM
-const float CONVERSION = 0.0006108;
-const float angle_threshold = .5;
-const float distance_threshold = .02;
-int k_dist = 210;
-int k_diff = 250;
-uint16_t min_angle_speed = 50;
-uint16_t min_drive_speed = 80;
-
 
 // Bluetooth Variables and Functions
 float waypoint[2] = {0, 0};
@@ -69,8 +58,8 @@ void ble_evt_write(ble_evt_t const* p_ble_evt) {
     //logic for each characteristic and related state changes
     //Try not to modify the state here...
     printf("Bluetooth message recieved\n");
-	printf("Distance: %f\n", waypoint[0]);
-	printf("Angle: %f\n", waypoint[1]);
+    printf("Distance: %f\n", waypoint[0]);
+    printf("Angle: %f\n", waypoint[1]);
     new_waypoint_written = true;
 }
 

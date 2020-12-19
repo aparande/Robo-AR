@@ -4,6 +4,14 @@
 #define TIME_MAX 20
 #define AVOID_DIST_INCR 0.5
 #define BACKWARD_DIST -0.3
+#define AVOID_ANGLE 45
+#define K_DIST 210
+#define K_DIFF 250
+#define K_TURN .8
+#define MIN_ANGLE_SPEED 50
+#define MIN_DRIVE_SPEED 80
+#define ANGLE_THRESHOLD .5
+#define DISTANCE_THRESHOLD .02
 
 #include <math.h>
 #include <stdbool.h>
@@ -59,7 +67,7 @@ typedef enum {
 	RIGHT_BUMP=2
 } bumps;
 
-// Variables that describe teh state of the robot during its driving
+// Variables that describe the state of the robot during its driving
 typedef struct driving_substate {
 	substates substate;
 	uint16_t previous_left_encoder;
@@ -89,7 +97,6 @@ typedef struct system_state {
 } system_state_t;
 
 
-
 // Transition Functions
 outputs_t transition(inputs_t input_state, system_state_t* curr_state);
 outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state);
@@ -117,13 +124,12 @@ void substate_transition_out(inputs_t input_state, driving_substate_t* curr_stat
 void print_state(system_state_t current_state, char* display_line_0, char* display_line_1);
 void print_substate(system_state_t current_state, char* display_line0, char* display_line_1);
 
+// Control functions. Given reference value, compute motor inputs and update some state values.
+void turning_controls(float target_angle, inputs_t input_state, system_state_t* curr_state, outputs_t* output);
+void driving_controls(float target_distance, inputs_t input_state, system_state_t* curr_state, outputs_t* output);
 
 // State Initializers
 system_state_t init_state();
 driving_substate_t init_substate();
-
-
-
-
 
 #endif /* STATES_H_ */
