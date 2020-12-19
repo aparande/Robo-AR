@@ -11,7 +11,6 @@
 #include "nrf.h"
 #include "nrf_delay.h"
 #include "nrf_drv_clock.h"
-#include "nrf_gpio.h"
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
@@ -29,26 +28,27 @@
 
 #include "states.h"
 
+#define CONVERSION 0.0006108
+#define CLOCK_FREQ 32768.0
 
 // I2C manager
 NRF_TWI_MNGR_DEF(twi_mngr_instance, 5, 0);
 
-// global variables
+// Global variables
 KobukiSensors_t sensors = {0};
-const float CLOCK_FREQ = 32768.0;
 
 // Intervals for advertising and connections
 static simple_ble_config_t ble_config = {
-        // c0:98:e5:49:xx:xx
+        // MAC address of form c0:98:e5:49:xx:xx, XX:XX is platform_id
         .platform_id       = 0x51,    // used as 4th octect in device BLE address
         .device_id         = 0xEEC5, 
-        .adv_name          = "DNEG", // used in advertisements if there is room
+        .adv_name          = "Robo-AR", // used in advertisements if there is room
         .adv_interval      = MSEC_TO_UNITS(1000, UNIT_0_625_MS),
         .min_conn_interval = MSEC_TO_UNITS(100, UNIT_1_25_MS),
         .max_conn_interval = MSEC_TO_UNITS(200, UNIT_1_25_MS),
 };
 
-//4607eda0-f65e-4d59-a9ff-84420d87a4ca
+// Initialize BLE service
 static simple_ble_service_t drive_command_service = {{
     .uuid128 = {0xca,0xa4,0x87,0x0d,0x42,0x84,0xff,0xA9,
                 0x59,0x4D,0x5e,0xf6,0xa0,0xed,0x07,0x46}
@@ -61,89 +61,81 @@ static simple_ble_char_t ack_char = {.uuid16 = 0xeda3};
 static simple_ble_char_t data_ready_char = {.uuid16 = 0xeda4};
 simple_ble_app_t* simple_ble_app;
 
-//drivecommand for romi: left motor input, right motor input, time
-//should really be using a struct for this... motor inputs have to be int16_t. Time is float.
-//Right now I just case motor inputs to int16_t before they get used.
+// Drive command for romi: left motor input, right motor input, time
 float drive_command[3] = {0, 0, 0};
-//distance driven by both wheels: left distance, right distance, time
+
+// Distance driven by both wheels: left distance, right distance, time
+
+// Number of data points
 int n_points = 10;
+
+// Array to send over BLE to computer
 float drive_data[] = {0,0,0,0,0,0,0,0,0,0,                        
                         0,0,0,0,0,0,0,0,0,0,
                         0,0,0,0,0,0,0,0,0,0};
+
+// Array to hold data points as they are collected 
 float cur_data[] = {0,0,0,0,0,0,0,0,0,0,                        
                         0,0,0,0,0,0,0,0,0,0,
                         0,0,0,0,0,0,0,0,0,0};
 
+//Index of data point to write to
 int point_idx = 0;
 bool data_ready = false;
 
-void clear_data(bool keep) {
+static void clear_data(bool keep) {
+    // Clear data for more writes
+
+    // If keep, first point will continue from old data. Else, overwrite first point
     if (keep) {
        cur_data[0] = cur_data[n_points * 3 - 3];
        cur_data[1] = cur_data[n_points * 3 - 2];
-      //  for (int i = 0; i < n_points; i++) {
-      //      cur_data[i * 3] = 0;
-      //      cur_data[i * 3 + 1] = 0;
-      //      cur_data[i * 3 + 2] = 0;
-      //  }
     } else {
         cur_data[0] = 0;
         cur_data[1] = 0;
         cur_data[2] = 0;
-        //cur_data[2] = cur_data[n_points * 3 - 1];
-//        for (int i = 1; i < n_points; i++) {
-//            cur_data[i * 3] = 0;
-//            cur_data[i * 3 + 1] = 0;
-//            cur_data[i * 3 + 2] = 0;
-//        }
     }
 }
 
-void copy_data() {
+static void copy_data() {
+    // Copy current data over so it can be logged
+
     memcpy(drive_data, cur_data, point_idx * 3 * sizeof(float));
 }
+
+// Initialize state variables
 
 uint8_t acknowledged = 0;
 states state = OFF;
 uint32_t start_ticks = 0;
 bool connected = false;
 
-
-void readInput() {
-    //printf("Bluetooth message recieved\n");
-    if (state == WAITING) {
-        //printf("Left Input: %f\n", drive_command[0]);
-        //printf("Right Input: %f\n", drive_command[1]);
-        //printf("Time: %f\n", drive_command[2]);
-        acknowledged = 1;
-        //simple_ble_notify_char(&ack_char);
-    }
-}
-
 void ble_evt_connected(ble_evt_t const* p_ble_evt) {
     connected = true;
 }
 void ble_evt_write(ble_evt_t const* p_ble_evt) {
-    //logic for each characteristic and related state changes
-    //Try not to modify the state here...
     if (simple_ble_is_char_event(p_ble_evt, &data_ready_char)) {
-        //printf("Data read event\n");
         data_ready = false;
     } else if (simple_ble_is_char_event(p_ble_evt, &drive_command_char)) {
-        readInput();
+      if (state == WAITING) {
+          acknowledged = 1;
+      }
     }
 }
 
-
-const float CONVERSION = 0.0006108;
 static float measure_distance(uint16_t current_encoder, uint16_t previous_encoder) {
   float distance = CONVERSION * (current_encoder - previous_encoder);
+
   return distance;
 }
 
 static float measure_time(void) {
+    // Get time from the start of timer
+
     uint32_t cur_ticks = app_timer_cnt_get();
     uint32_t tick_diff = app_timer_cnt_diff_compute(cur_ticks, start_ticks);
+
+    // Need to divide ticks by clock frequency
     float time = tick_diff/CLOCK_FREQ;
     return time;
 }
@@ -175,10 +167,12 @@ void print_state(states current_state){
    }
 }
 
+// Timing doesn't work without this...
 static void dummy_handler(void * p_context)
 {
-    //printf("Dummy fired!\n");
+  // We don't need to do anything here :)
 }
+
 int main(void) {
   ret_code_t error_code = NRF_SUCCESS;
 
@@ -213,17 +207,6 @@ int main(void) {
   // Start Advertising
   simple_ble_adv_only_name();
 
-  // initialize LEDs
-  nrf_gpio_pin_dir_set(23, NRF_GPIO_PIN_DIR_OUTPUT);
-  nrf_gpio_pin_dir_set(24, NRF_GPIO_PIN_DIR_OUTPUT);
-  nrf_gpio_pin_dir_set(25, NRF_GPIO_PIN_DIR_OUTPUT);
-
-  nrf_gpio_pin_set(23);
-  nrf_gpio_pin_set(24);
-  nrf_gpio_pin_set(25);
-
-
-
   // initialize display
   nrf_drv_spi_t spi_instance = NRF_DRV_SPI_INSTANCE(1);
   nrf_drv_spi_config_t spi_config = {
@@ -256,13 +239,11 @@ int main(void) {
   kobukiInit();
   printf("Kobuki initialized!\n");
 
+  // Initialize timer
   nrf_drv_clock_init();
-  //APP_ERROR_CHECK(err_code);
   nrf_drv_clock_lfclk_request(NULL);  
   error_code = app_timer_init();
   APP_ERROR_CHECK(error_code);
-
-  //Need to make a timer for a dumb reason
   APP_TIMER_DEF(m_repeated_timer_id);
   error_code = app_timer_create(&m_repeated_timer_id,
                    APP_TIMER_MODE_REPEATED,
@@ -281,49 +262,57 @@ int main(void) {
   while (1) {
     // read sensors from robot
     int status = kobukiSensorPoll(&sensors);
+
     // print out current state
     print_state(state);
+
     // switch into appropriate states
-    // OFF - No response to any signals until button pressed to go to WAITING
+    // OFF - No response to any signals until button pressed or connected. Then go to WAITING
     // WAITING - Do nothing until waypoint is recieved. Then go to TURNING
     // Driving - Drive the amount specified by waypoint. Then go back to WAITING
     switch(state) {
       case OFF: {
+        // Do not respond to waypoint commands until button is pressed or device connected
+
         if (is_button_pressed(&sensors) || connected) {
-          nrf_gpio_pin_clear(23);
           state = WAITING;
         } else {
-          state = OFF;
+          // Don't move in off state
+
           kobukiDriveDirect(0, 0);
+          state = OFF;
         }
         break;
       }
       case WAITING: {
+        // Idle until command recieved
+
         if (is_button_pressed(&sensors)) {
-          nrf_gpio_pin_set(23);
           state = OFF;
         } else if (acknowledged==1) {
-          nrf_gpio_pin_clear(24);
+          // When we recieved a command, set appropriate variables and start executing
+
           encoder_prev_left = sensors.leftWheelEncoder;
           encoder_prev_right = sensors.rightWheelEncoder;
           start_ticks = app_timer_cnt_get();
           state = DRIVING;
         } else {
-          state = WAITING;
+          // Don't move in waiting state
+
           kobukiDriveDirect(0, 0);
+          state = WAITING;
         }
         break;
       }
       case DRIVING: {
+        // Drive until the timer expires
+
         float cur_time = measure_time();
         if (is_button_pressed(&sensors)) {
-            nrf_gpio_pin_set(23);
-            nrf_gpio_pin_set(24);
             clear_data(false);
             point_idx=0;
             state = OFF;
         } else if (cur_time > drive_command[2]) {
-            nrf_gpio_pin_set(24);
             acknowledged = 0;
             simple_ble_notify_char(&ack_char);
             copy_data();

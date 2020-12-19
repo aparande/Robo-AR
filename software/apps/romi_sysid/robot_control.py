@@ -11,7 +11,6 @@ from bluepy.btle import Peripheral, DefaultDelegate
 
 parser = argparse.ArgumentParser(description='Print advertisement data from a BLE device')
 args = parser.parse_args()
-#addr = args.addr.lower()
 addr = 'C0:98:E5:51:EE:C5'
 if len(addr) != 17:
     raise ValueError("Invalid address supplied")

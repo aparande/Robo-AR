@@ -11,7 +11,7 @@ bool is_gyro_integrating = false;
 
 // Intervals for advertising and connections
 simple_ble_config_t ble_config = {
-        // MAC address of form c0:98:e5:49:xx:xx, XX:XX is platform_Iid
+        // MAC address of form c0:98:e5:49:xx:xx, XX:XX is platform_id
         .platform_id       = 0x46,    // used as 4th octect in device BLE address
         .device_id         = 0xEEC5, 
         .adv_name          = "Robo-AR", // used in advertisements if there is room
