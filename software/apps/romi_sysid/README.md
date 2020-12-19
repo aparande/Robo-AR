@@ -3,8 +3,7 @@ Robo-AR System ID Code
 
 # Code Structure
 
-The code here is structured as an FSM. There are __ main files, each of which handle its own part of the FSM. 
-
+The code here is structured as an FSM. There is a single main file, which implements the entire FSM for data collection. 
 
 # How To Run
 
@@ -33,7 +32,14 @@ We have also included a Python script `robot_control.py` that can be used to col
 
 > `sudo ./robot_control.py`
 
-The script should now do something, but only Jay knows what that is.
+Upon running the file, you will be asked to specify parameters for the trial to record data for. These parameters are
+- Left motor input
+- Right motor input
+- Time for each collection period
+- Name of trial
+- Number of collection periods
+
+All data will be stored as a time-series in `.csv` format under `/data` as `{name}.csv`.
 
 
 
