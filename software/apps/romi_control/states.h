@@ -3,7 +3,7 @@
 
 #define TIME_MAX 20
 #define AVOID_DIST_INCR 0.5
-#define BACKWARD_DIST 0.3
+#define BACKWARD_DIST -0.3
 
 #include <math.h>
 #include <stdbool.h>
