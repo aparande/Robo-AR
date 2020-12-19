@@ -42,8 +42,7 @@
 #include "inputs.h"
 
 
-
-
+// Main FSM States
 typedef enum {
     OFF=0, // Phone is disconnected from the Robot
     WAITING=1, // Robot is waiting for a waypoint
@@ -52,6 +51,7 @@ typedef enum {
     END_TURNING=4, // Robot is turning back to its original position
 } states;
 
+//Substate States
 typedef enum {
 	FORWARD=0, // Robot is driving forward
 	STOPPED=1, // Robot has hit an obstacle
@@ -60,14 +60,14 @@ typedef enum {
 	AVOIDANCE=4, // Robot is driving away from the obstacle
 } substates;
 
-
+// Front Bumper Sides
 typedef enum {
 	NO_BUMP=0,
 	LEFT_BUMP=1,
 	RIGHT_BUMP=2
 } bumps;
 
-// Variables that describe the state of the robot during its driving
+// Variables that describe the state of the robot during DRIVING state
 typedef struct driving_substate {
 	substates substate;
 	uint16_t previous_left_encoder;

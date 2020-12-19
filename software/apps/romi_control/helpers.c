@@ -1,10 +1,6 @@
 #include "helpers.h"
 
-//NRF_TWI_MNGR_DEF(twi_mngr_instance, 5, 0);
-
-
-// Global Variables 
-
+// Set global Variables
 KobukiSensors_t sensors = {0};
 ret_code_t error_code = NRF_SUCCESS;
 bool is_gyro_integrating = false;
@@ -64,7 +60,6 @@ void ble_evt_write(ble_evt_t const* p_ble_evt) {
 }
 
 // Runs major setup code for the main loop. Sets up Bluetooth and LEDs
-
 void setup() {
   // initialize RTT library
   error_code = NRF_LOG_INIT(NULL);
@@ -74,14 +69,14 @@ void setup() {
 
   // Setup BLE
   simple_ble_app = simple_ble_init(&ble_config);
-
   simple_ble_add_service(&robot_service);
 
-  //Register your characteristics
+  //Register Waypoint Characteristic
   simple_ble_add_characteristic(0, 1, 0, 0,
       sizeof(waypoint), (uint8_t*)&waypoint,
       &robot_service, &waypoint_char);
 
+  //Register Acknowledged Characteristic
   simple_ble_add_characteristic(1, 0, 1, 0, 
     sizeof(acknowledged), (uint8_t*)&acknowledged, 
     &robot_service, &ack_char);
@@ -131,7 +126,6 @@ float measure_distance(uint16_t current_encoder, uint16_t previous_encoder) {
 
 // Changes an angle to be within -180 and 180 degrees. 
 float angle_modulo(float possible_angle){
-
   if(possible_angle > 0){
     return fmodf(possible_angle + 180, 360) - 180; 
   } else {
