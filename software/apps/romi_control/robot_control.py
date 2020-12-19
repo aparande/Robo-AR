@@ -1,66 +1,50 @@
 #!/usr/bin/env python3
 import struct
 import time
-import keyboard
-import argparse
 from getpass import getpass
 from bluepy.btle import Peripheral, DefaultDelegate
 import binascii
 
 parser = argparse.ArgumentParser(description='Print advertisement data from a BLE device')
-#parser.add_argument('addr', metavar='address', type=str, help='Address of the form XX:XX:XX:XX:XX:XX')
-#args = parser.parse_args()
-#addr = args.addr.lower()
+# BLE Address of the Romi. Change if your Romi has a different address
 addr = "c0:98:e5:46:ee:c5"
 if len(addr) != 17:
     raise ValueError("Invalid address supplied")
 
+# Define relevant UUIDs for the Romi
 SERVICE_UUID = "4607eda0-f65e-4d59-a9ff-84420d87a4ca"
-CHAR_UUIDS = "4607eda1-f65e-4d59-a9ff-84420d87a4ca"# add your characteristics
-ACK_UUID = "4607eda2-f65e-4d59-a9ff-84420d87a4ca"# add your characteristics
+WAYPOINT_CMD_UUID = "4607eda1-f65e-4d59-a9ff-84420d87a4ca"
+ACK_UUID = "4607eda2-f65e-4d59-a9ff-84420d87a4ca"
 
 class RobotController():
 
     def __init__(self, address):
 
+        # Connect to the Romi over BLE
         self.robot = Peripheral(addr)
         print("connected")
 
-        # keep state for keypresses
-        self.pressed = {"up": False, "down": False, "right": False, "left": False}
-        # get service from robot
-        # get characteristic handles from service/robot
+        # Get service from robot
         self.sv = self.robot.getServiceByUUID(SERVICE_UUID)
-        self.ch = self.sv.getCharacteristics(CHAR_UUIDS)[0]
+        # Get characteristic handles from service/robot
+        self.waypoint_cmd = self.sv.getCharacteristics(WAYPOINT_CMD_UUID)[0]
         self.ack = self.sv.getCharacteristics(ACK_UUID)[0]
-        #keyboard.hook(self.on_key_event)
 
         while True:
-            #ack = int(binascii.b2a_hex(self.ack.read())[:2], 16)
+            # Check to see if the robot is ready to recieve a command
             ack, = struct.unpack("i", self.ack.read())
-            print(ack)
             if ack==0:
+                # The robot is ready to recieve a command
+                # Get command as input from the user
                 r = float(input("Distance (m): "))
                 t = float(input("Angle (degrees): "))
-                self.ch.write(struct.pack('ff', *[r, t]));
+                # Write to the appropriate characteristic
+                # The waypoint command is a sequence of two floats, representing a polar coordiantes format
+                self.waypoint_cmd.write(struct.pack('ff', *[r, t]));
+                # Tell the robot that we want it to start executing our command
                 self.ack.write(struct.pack('Bxxx', *[ack+1]))
-                
-
-#    def on_key_event(self, event):
-#        # print key name
-#        print(event.name)
-#        # if a key unrelated to direction keys is pressed, ignore
-#        if event.name not in self.pressed: return
-#        # if a key is pressed down
-#        if event.event_type == keyboard.KEY_DOWN:
-#            # if that key is already pressed down, ignore
-#            if self.pressed[event.name]: return
-#            # set state of key to pressed
-#            self.pressed[event.name] = True
-#            self.ch.write(bytes([0x01, 0x01]));
-#        else:
-#            # set state of key to released
-#            self.pressed[event.name] = False
+                # Give the robot some time to update the characteristic value before we read it again
+                time.sleep(1)
 
     def __enter__(self):
         return self

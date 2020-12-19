@@ -29,6 +29,7 @@
 
 #include "helpers.h"
 
+//defines output data, such as BLE ack, motor values, and LED Display strings
 typedef struct outputs {
 	bool notify_ack;
 	int notify_val;
@@ -39,8 +40,7 @@ typedef struct outputs {
 } outputs_t;
 
 
-void do_outputs(outputs_t output);
-
-
+// Takes in all output data from the FSM and sends it to sensors to get done. 
+void do_outputs(outputs_t* output);
 
 #endif /* OUTPUTS_H_ */

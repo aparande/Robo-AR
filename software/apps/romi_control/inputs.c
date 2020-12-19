@@ -1,6 +1,6 @@
 #include "inputs.h"
 
-
+// Interacts with all sensor data and sensor related functions to return a single struct of inputs
 inputs_t get_inputs() {
 	inputs_t return_inputs = {0};
 
@@ -16,7 +16,6 @@ inputs_t get_inputs() {
 
 	return_inputs.is_integrating = is_gyro_integrating;
 	if(return_inputs.is_integrating) {
-		printf("integrating!\n");
 		return_inputs.gyro_integration_z_value = angle_modulo(lsm9ds1_read_gyro_integration().z_axis);
 	}
 	return_inputs.has_recently_connected = connected;
@@ -24,12 +23,11 @@ inputs_t get_inputs() {
 	if (new_waypoint_written) {
 		return_inputs.waypoint_distance = waypoint[0];
 		return_inputs.waypoint_angle = angle_modulo(waypoint[1]);
-		printf("Waypoint Distance: %f\n", return_inputs.waypoint_distance);
-		printf("Waypoint Angle: %f\n", return_inputs.waypoint_angle);
 	}
 	new_waypoint_written = false;
 	return return_inputs;
 }
+
 
 void stop_gyro_integration() {
 	lsm9ds1_stop_gyro_integration();

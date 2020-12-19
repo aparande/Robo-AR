@@ -1,26 +1,21 @@
 #!/usr/bin/env python3
 import struct
 import time
-import keyboard
-import argparse
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 from getpass import getpass
 from bluepy.btle import Peripheral, DefaultDelegate
 
-parser = argparse.ArgumentParser(description='Print advertisement data from a BLE device')
-args = parser.parse_args()
-#addr = args.addr.lower()
 addr = 'C0:98:E5:51:EE:C5'
 if len(addr) != 17:
     raise ValueError("Invalid address supplied")
-
-SERVICE_UUID = "4607eda0-f65e-4d59-a9ff-84420d87a4ca"
-CHAR_UUID = "4607eda1-f65e-4d59-a9ff-84420d87a4ca"# add your characteristics
-DATA_UUID = "4607eda2-f65e-4d59-a9ff-84420d87a4ca"# add your characteristics
-ACK_UUID = "4607eda3-f65e-4d59-a9ff-84420d87a4ca"# add your characteristics
-DATA_READY_UUID = "4607eda4-f65e-4d59-a9ff-84420d87a4ca"# add your characteristics
+    
+# Define UUIDs for BLE connection
+SERVICE_UUID = "4607eda0-f65e-4d59-a9ff-84420d87a4ca" # Romi BLE service
+DRIVE_COMMAND_UUID = "4607eda1-f65e-4d59-a9ff-84420d87a4ca"# Romi drive command
+DATA_UUID = "4607eda2-f65e-4d59-a9ff-84420d87a4ca"# Data recieved from Romi
+ACK_UUID = "4607eda3-f65e-4d59-a9ff-84420d87a4ca"# Acknowledgement from Romi
+DATA_READY_UUID = "4607eda4-f65e-4d59-a9ff-84420d87a4ca"# Data ready to be read from Romi
 
 class RobotDelegate(DefaultDelegate):
     def __init__(self, controller):
@@ -40,41 +35,41 @@ class RobotController():
         self.robot.setDelegate(RobotDelegate(self))
         print("connected")
 
-        # keep state for keypresses
-        self.pressed = {"up": False, "down": False, "right": False, "left": False}
         # get service from robot
         # get characteristic handles from service/robot
         self.sv = self.robot.getServiceByUUID(SERVICE_UUID)
-        self.ch = self.sv.getCharacteristics(CHAR_UUID)[0]
+        self.drive_command = self.sv.getCharacteristics(CHAR_UUID)[0]
         self.data = self.sv.getCharacteristics(DATA_UUID)[0]
         self.ack = self.sv.getCharacteristics(ACK_UUID)[0]
         self.data_ready = self.sv.getCharacteristics(DATA_READY_UUID)[0]
         self.data_list = []
+        
+        # Set trial parameters
         ls = float(input("Left Speed: "))
         rs = float(input("Right Speed: "))
         t = float(input("Time (float seconds): "))
         name = "l_{}_r_{}".format(int(ls), int(rs))
         n = int(input("Num trials: "))
+        
         for i in range(n):
             while True:
                 ack = struct.unpack("B", self.ack.read())[0]
-               # if self.robot.waitForNotifications(1):
-               #     print("I got it!")
-               #     continue
-                print("Ack val: {}".format(ack))
+                # Send command when the robot is ready
                 if ack==0:
                    if self.data_list:
                        self.write_data(ls, rs, "{}_{}".format(name, i))
                        self.data_list = []
                        break
                    input("Ready?") 
-                   self.ch.write(struct.pack('fff', *[ls, rs, t]))
+                   self.send_command(ls, rs, t);
                    ack = struct.unpack("B", self.ack.read())[0]
+                
+                   # Wait until robot acknowledges before proceding
                    while ack != 1:
                        continue
                 else:
                     data_ready = struct.unpack("B", self.data_ready.read())[0]
-                    print("Data ready?: {}".format(data_ready))
+                    # Read data when the robot is ready
                     if data_ready:
                         data = struct.unpack("f" * 30, self.data.read())
                         self.data_list.extend(data)
@@ -83,9 +78,12 @@ class RobotController():
                         print("Waiting...")
 
     def send_command(self, ls, rs, t):
+        # Tell Romi to drive specified left and right speeds for set amount of time
         self.ch.write(struct.pack('fff', *[ls, rs, t]))
 
     def write_data(self, ls, rs, name):
+        # Write data to CSV file
+        
         left_input = [ls] * (len(self.data_list)//3)
         right_input = [rs] * (len(self.data_list)//3)
         left_dists = self.data_list[::3]
@@ -97,22 +95,6 @@ class RobotController():
         df.columns = header
         print(df)
         df.to_csv("data/{}.csv".format(name), index=False)
-
-#    def on_key_event(self, event):
-#        # print key name
-#        print(event.name)
-#        # if a key unrelated to direction keys is pressed, ignore
-#        if event.name not in self.pressed: return
-#        # if a key is pressed down
-#        if event.event_type == keyboard.KEY_DOWN:
-#            # if that key is already pressed down, ignore
-#            if self.pressed[event.name]: return
-#            # set state of key to pressed
-#            self.pressed[event.name] = True
-#            self.ch.write(bytes([0x01, 0x01]));
-#        else:
-#            # set state of key to released
-#            self.pressed[event.name] = False
 
     def __enter__(self):
         return self
