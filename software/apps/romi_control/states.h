@@ -98,35 +98,35 @@ typedef struct system_state {
 
 
 // Transition Functions
-outputs_t transition(inputs_t input_state, system_state_t* curr_state);
-outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state);
+outputs_t transition(inputs_t* input_state, system_state_t* curr_state);
+outputs_t substate_transition(inputs_t* input_state, system_state_t* curr_state);
 
 
 // Transition Function Helpers
 
 // Function is called whenever a transition from one state to another happens in the main FSM
 // It deals with any startup behavior involved in transitioning INTO a given state
-void transition_in(inputs_t input_state, system_state_t* curr_state); 
+void transition_in(inputs_t* input_state, system_state_t* curr_state); 
 
 // Function is called whenever a transition from one state to another happens in the main FSM
 // Deals with any cleanup behavior involved in transitioning OUT OF a state
-void transition_out(inputs_t input_state, system_state_t* curr_state, states old_state); //
+void transition_out(system_state_t* curr_state, states old_state); //
 
 // Function is called whenever a transition from one state to another happens in the child FSM
 // It deals with any startup behavior involved in transitioning INTO a given state
-void substate_transition_in(inputs_t input_state, driving_substate_t* curr_state);
+void substate_transition_in(inputs_t* input_state, driving_substate_t* curr_state);
 
 // Function is called whenever a transition from one state to another happens in the child FSM
 // Deals with any cleanup behavior involved in transitioning OUT OF a state
-void substate_transition_out(inputs_t input_state, driving_substate_t* curr_state, substates old_state);
+void substate_transition_out(driving_substate_t* curr_state, substates old_state);
 
 // Printing Functions. Determines what is written on the display. 
 void print_state(system_state_t current_state, char* display_line_0, char* display_line_1);
 void print_substate(system_state_t current_state, char* display_line0, char* display_line_1);
 
 // Control functions. Given reference value, compute motor inputs and update some state values.
-void turning_controls(float target_angle, inputs_t input_state, system_state_t* curr_state, outputs_t* output);
-void driving_controls(float target_distance, inputs_t input_state, system_state_t* curr_state, outputs_t* output);
+void turning_controls(float target_angle, inputs_t* input_state, system_state_t* curr_state, outputs_t* output);
+void driving_controls(float target_distance, inputs_t* input_state, system_state_t* curr_state, outputs_t* output);
 
 // State Initializers
 system_state_t init_state();

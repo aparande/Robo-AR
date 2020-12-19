@@ -47,10 +47,10 @@ int main(void) {
   system_state_t system_state = init_state();
   while(true) {
     inputs_t inputs = get_inputs();
-    outputs_t output = transition(inputs, &system_state);
+    outputs_t output = transition(&inputs, &system_state);
     display_write(output.display_line_0, DISPLAY_LINE_0);
     display_write(output.display_line_1, DISPLAY_LINE_1);
-    do_outputs(output);
+    do_outputs(&output);
     nrf_delay_ms(10);
   }
 }

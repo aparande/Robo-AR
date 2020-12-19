@@ -1,10 +1,10 @@
 #include "states.h"
 
-void turning_controls(float target_angle, inputs_t input_state, system_state_t* curr_state, outputs_t* output) {
+void turning_controls(float target_angle, inputs_t* input_state, system_state_t* curr_state, outputs_t* output) {
 	// Compute motor inputs for robot to turn a target angle (degrees)
 
 	// Update current orientation
-	curr_state->substate.relative_orientation_angle = input_state.gyro_integration_z_value; 
+	curr_state->substate.relative_orientation_angle = input_state->gyro_integration_z_value; 
 
 	// Compute angle error
 	float diff = angle_modulo(target_angle - curr_state->substate.relative_orientation_angle);
@@ -20,7 +20,7 @@ void turning_controls(float target_angle, inputs_t input_state, system_state_t* 
 	curr_state->substate.substate = ROTATING;
 }
 
-void driving_controls(float target_distance, inputs_t input_state, system_state_t* curr_state, outputs_t* output) {
+void driving_controls(float target_distance, inputs_t* input_state, system_state_t* curr_state, outputs_t* output) {
 	// Compute motor inputs for robot drive a target distance (meters)
 
 	// Compute distance error on both wheels
@@ -31,14 +31,14 @@ void driving_controls(float target_distance, inputs_t input_state, system_state_
 	float wheel_diff = diff_right - diff_left;
 
 	// Update distance traveled by both wheels
-	float dist_traveled_left = measure_distance(input_state.left_encoder, curr_state->substate.previous_left_encoder);
-	float dist_traveled_right = measure_distance(input_state.right_encoder, curr_state->substate.previous_right_encoder);
+	float dist_traveled_left = measure_distance(input_state->left_encoder, curr_state->substate.previous_left_encoder);
+	float dist_traveled_right = measure_distance(input_state->right_encoder, curr_state->substate.previous_right_encoder);
 	curr_state->substate.total_distance_traveled_left += dist_traveled_left;
 	curr_state->substate.total_distance_traveled_right += dist_traveled_right;
 
 	// Update encoder values for next distance calculation
-	curr_state->substate.previous_left_encoder = input_state.left_encoder;
-	curr_state->substate.previous_right_encoder = input_state.right_encoder;
+	curr_state->substate.previous_left_encoder = input_state->left_encoder;
+	curr_state->substate.previous_right_encoder = input_state->right_encoder;
 
 	// Update distance traveled by car
 	float avg_dist = (dist_traveled_right + dist_traveled_left) / 2;
@@ -66,7 +66,7 @@ system_state_t init_state() {
 
 }
 
-void transition_in(inputs_t input_state, system_state_t* curr_state) {
+void transition_in(inputs_t* input_state, system_state_t* curr_state) {
 	switch(curr_state->state) {
 		case OFF: {
 			(*curr_state) = init_state();
@@ -90,15 +90,15 @@ void transition_in(inputs_t input_state, system_state_t* curr_state) {
 			curr_state->curr_orientation_angle = 0;
 			curr_state->position_x = 0;
 			curr_state->position_y = 0;
-			curr_state->substate.previous_left_encoder = input_state.left_encoder;
-			curr_state->substate.previous_right_encoder = input_state.right_encoder;
+			curr_state->substate.previous_left_encoder = input_state->left_encoder;
+			curr_state->substate.previous_right_encoder = input_state->right_encoder;
       		curr_state->substate.target_forward_distance = curr_state->distance_to_travel;
 			break;
 		}
 	}
 }
 
-void transition_out(inputs_t input_state, system_state_t* curr_state, states old_state) {
+void transition_out(system_state_t* curr_state, states old_state) {
 	switch(old_state) {
 		case END_TURNING:
 		case TURNING: {
@@ -119,14 +119,14 @@ void transition_out(inputs_t input_state, system_state_t* curr_state, states old
 	}
 }
 
-outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
+outputs_t transition(inputs_t* input_state, system_state_t* curr_state) {
 	outputs_t output = {0};
 	states old_state = curr_state->state;
 	switch(curr_state->state) {
 		case OFF: {
 			// Robot is disconnected
 
-			if (input_state.has_recently_connected) {
+			if (input_state->has_recently_connected) {
 				// Go to WAITING after connecting
 
           		curr_state->state = WAITING;
@@ -140,15 +140,15 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 		case WAITING: {
 			// Robot is connected and waiting for command
 
-	        if (input_state.button_pressed || !input_state.has_recently_connected) {
+	        if (input_state->button_pressed || !input_state->has_recently_connected) {
 	          	curr_state->state = OFF;
-	        } else if (input_state.new_waypoint_written) {
+	        } else if (input_state->new_waypoint_written) {
 				// Transition after recieving waypoint
 
 	        	curr_state->acknowledged_val = 1;
 	        	output.notify_ack = true;
-	        	curr_state->turn_angle = input_state.waypoint_angle;
-	        	curr_state->distance_to_travel = input_state.waypoint_distance;
+	        	curr_state->turn_angle = input_state->waypoint_angle;
+	        	curr_state->distance_to_travel = input_state->waypoint_distance;
             	curr_state->state = TURNING;
 	        } else {
 				output.left_speed = 0;
@@ -162,7 +162,7 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 
 			// Compute angle error  
 	        float diff = angle_modulo(curr_state->turn_angle - curr_state->curr_orientation_angle);
-	        if (input_state.button_pressed || !input_state.has_recently_connected) {
+	        if (input_state->button_pressed || !input_state->has_recently_connected) {
 	          	curr_state->state = OFF;
 	        } else if (fabs(diff) < ANGLE_THRESHOLD) {
 				// After orienting toward waypiont, drive to waypoint
@@ -184,7 +184,7 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 			float diff_left = curr_state->substate.target_forward_distance - curr_state->substate.total_distance_traveled_left;
 			float diff_right = curr_state->substate.target_forward_distance - curr_state->substate.total_distance_traveled_right;
 			float avg  = (diff_left + diff_right) / 2;
-	        if (input_state.button_pressed || !input_state.has_recently_connected) {
+	        if (input_state->button_pressed || !input_state->has_recently_connected) {
 	          	curr_state->state = OFF;
 	        } else if (curr_state->substate.substate == FORWARD && avg < DISTANCE_THRESHOLD) {
 				// Upon reaching the waypoint, the robot will now reorient itself
@@ -207,7 +207,7 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 
 	        float diff = angle_modulo(curr_state->turn_angle - curr_state->curr_orientation_angle);
 
-			if (input_state.button_pressed || !input_state.has_recently_connected) {
+			if (input_state->button_pressed || !input_state->has_recently_connected) {
 	          	curr_state->state = OFF;
 			} else if (fabs(diff) < ANGLE_THRESHOLD) {
 				// Tell the phone we are ready for another command
@@ -227,7 +227,7 @@ outputs_t transition(inputs_t input_state, system_state_t* curr_state) {
 	output.notify_val  = curr_state->acknowledged_val;
 	// if there was a transition, run transition in and out functions
 	if (curr_state->state != old_state) {
-     		transition_out(input_state, curr_state, old_state);
+     		transition_out(curr_state, old_state);
      		transition_in(input_state, curr_state);
     }
 	print_state(*curr_state, output.display_line_0, output.display_line_1);
@@ -306,14 +306,14 @@ driving_substate_t init_substate() {
 	return ret_substate;
 }
 
-void substate_transition_in(inputs_t input_state, driving_substate_t* curr_state){
+void substate_transition_in(inputs_t* input_state, driving_substate_t* curr_state){
 
 	switch(curr_state->substate) {
 		case AVOIDANCE:
 		case BACKWARD:
 		case FORWARD: {
-			curr_state->previous_left_encoder = input_state.left_encoder;
-			curr_state->previous_right_encoder = input_state.right_encoder;
+			curr_state->previous_left_encoder = input_state->left_encoder;
+			curr_state->previous_right_encoder = input_state->right_encoder;
 			curr_state->total_distance_traveled_left = 0;
 			curr_state->total_distance_traveled_right = 0;
 			break;
@@ -332,7 +332,7 @@ void substate_transition_in(inputs_t input_state, driving_substate_t* curr_state
 
 }
 
-void substate_transition_out(inputs_t input_state, driving_substate_t* curr_state, substates old_state){
+void substate_transition_out(driving_substate_t* curr_state, substates old_state){
 
 	switch(old_state) {
 		case AVOIDANCE:
@@ -356,7 +356,7 @@ void substate_transition_out(inputs_t input_state, driving_substate_t* curr_stat
 
 }
 
-outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
+outputs_t substate_transition(inputs_t* input_state, system_state_t* curr_state){
 
 	outputs_t output = {0};
 	substates old_state = curr_state->substate.substate;
@@ -365,10 +365,10 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 	case FORWARD: {
 		// Controls for driving forward
 
-		if(input_state.bump_left || input_state.bump_right){
+		if(input_state->bump_left || input_state->bump_right){
 			// Obstacle detection
 
-			curr_state->substate.most_recent_bump = input_state.bump_left ? LEFT_BUMP : RIGHT_BUMP;
+			curr_state->substate.most_recent_bump = input_state->bump_left ? LEFT_BUMP : RIGHT_BUMP;
 			curr_state->substate.avoidance_distance += AVOID_DIST_INCR;
 			curr_state->substate.substate = STOPPED;
 		} else {
@@ -445,10 +445,10 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 		float diff_left = curr_state->substate.avoidance_distance - curr_state->substate.total_distance_traveled_left;
 		float diff_right = curr_state->substate.avoidance_distance - curr_state->substate.total_distance_traveled_right;
 		float avg_diff = (diff_left + diff_right) / 2;
-		if(input_state.bump_left || input_state.bump_right){
+		if(input_state->bump_left || input_state->bump_right){
 			// Obstacle detection
 
-			curr_state->substate.most_recent_bump = input_state.bump_left ? LEFT_BUMP : RIGHT_BUMP;
+			curr_state->substate.most_recent_bump = input_state->bump_left ? LEFT_BUMP : RIGHT_BUMP;
 			curr_state->substate.substate = STOPPED;
 		} else if(fabs(avg_diff) < DISTANCE_THRESHOLD){
 			// Re-compute target angles and distances now that we are around the obstacle
@@ -476,7 +476,7 @@ outputs_t substate_transition(inputs_t input_state, system_state_t* curr_state){
 	}
 	// if there was a substate transition, run the transition in and transition out functions
 	if (curr_state->substate.substate != old_state) {
-     		substate_transition_out(input_state, &(curr_state->substate), old_state);
+     		substate_transition_out(&(curr_state->substate), old_state);
      		substate_transition_in(input_state, &(curr_state->substate));
     }
 	return output;
