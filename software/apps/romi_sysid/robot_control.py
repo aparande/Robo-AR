@@ -57,9 +57,6 @@ class RobotController():
         for i in range(n):
             while True:
                 ack = struct.unpack("B", self.ack.read())[0]
-               # if self.robot.waitForNotifications(1):
-               #     print("I got it!")
-               #     continue
                 print("Ack val: {}".format(ack))
                 if ack==0:
                    if self.data_list:
@@ -96,22 +93,6 @@ class RobotController():
         df.columns = header
         print(df)
         df.to_csv("data/{}.csv".format(name), index=False)
-
-#    def on_key_event(self, event):
-#        # print key name
-#        print(event.name)
-#        # if a key unrelated to direction keys is pressed, ignore
-#        if event.name not in self.pressed: return
-#        # if a key is pressed down
-#        if event.event_type == keyboard.KEY_DOWN:
-#            # if that key is already pressed down, ignore
-#            if self.pressed[event.name]: return
-#            # set state of key to pressed
-#            self.pressed[event.name] = True
-#            self.ch.write(bytes([0x01, 0x01]));
-#        else:
-#            # set state of key to released
-#            self.pressed[event.name] = False
 
     def __enter__(self):
         return self
