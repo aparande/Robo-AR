@@ -6,7 +6,7 @@ Robo AR
 
 Our goal is to control a robot using AR. The basic idea is that the user will be able to “draw” a path by setting waypoints in an AR environment using a smartphone app, and the robot will drive from waypoint to waypoint.
 
-More information can be found in our [proposal](Proposal.md)
+More information can be found in our [proposal](Proposal.md), [poster](Final_Poster.pdf), and [final report](Robo_AR_Final_Report.pdf).
 
 
 # Requirements
